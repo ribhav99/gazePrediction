@@ -1,8 +1,8 @@
 import cv2
 
 
-face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-right_eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
+face_cascade = cv2.CascadeClassifier('../etc/haarcascade_frontalface_default.xml')
+right_eye_cascade = cv2.CascadeClassifier('../etc/haarcascade_eye.xml')
 
 pupil_detector = cv2.SimpleBlobDetector_create()
 
