@@ -1,9 +1,12 @@
 from praatio import textgrid
-tg = textgrid.openTextgrid('../data/gaze_files/DVA1A.gaze', False)
-print(dir(tg))
-print('\n\n\n')
-print(tg.tierDict)
-print('\n\n\n')
-print(dir(tg.tierDict['kijkrichting spreker1 [v] (TIE1)']))
-print('\n\n\n')
-print(tg.tierDict['kijkrichting spreker1 [v] (TIE1)'].entryList[0])
+from bisect import bisect
+
+def get_intervals(file_path):
+    tg = textgrid.openTextgrid(file_path, False)
+    return tg.tierDict['kijkrichting spreker1 [v] (TIE1)'].entryList
+
+def create_targets(file_path, audio_length=5, window_length=0.01):
+    intervals = get_intervals(file_path)
+    
+if __name__ == '__main__':
+    pass
