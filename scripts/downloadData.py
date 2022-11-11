@@ -34,5 +34,5 @@ def download_files(link, startswith=None, endswith=None):
 if __name__ == '__main__':
     speech_url = 'https://www.fon.hum.uva.nl/IFA-SpokenLanguageCorpora/IFADVcorpus/Speech/'
     annotations_url = 'https://www.fon.hum.uva.nl/IFA-SpokenLanguageCorpora/IFADVcorpus/Annotations/EAF/'
-    # download_files(speech_url, startswith='DV')
+    download_files(speech_url, startswith='DV')
     download_files(annotations_url, endswith='gaze')

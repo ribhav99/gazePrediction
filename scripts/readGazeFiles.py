@@ -28,4 +28,4 @@ def create_targets(file_path, audio_length=5, window_length=0.1):
 
     
 if __name__ == '__main__':
-    create_targets('../data/gaze_files/DVA1A.gaze')
+    print(create_targets('../data/gaze_files/DVA1A.gaze'))
