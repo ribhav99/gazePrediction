@@ -1,6 +1,7 @@
 from praatio import textgrid
 from bisect import bisect
 import numpy as np
+import os
 
 def get_intervals(file_path):
     tg = textgrid.openTextgrid(file_path, False)
@@ -24,6 +25,18 @@ def create_targets(file_path, audio_length=5, window_length=0.1):
             # if clip == 7 and window == 9:
             #     print(time, intervals[index-1], intervals[index], target)
     return targets
+
+def create_targets_for_all_participants(folder_path, audio_length=5, window_length=0.1):
+    all_targets = {}
+
+    for file in os.listdir(folder_path):
+        path = os.path.join(folder_path, file)
+        participant_id = file[: file.index('.wav')]
+        target = create_targets(path, audio_length, window_length)
+        assert participant_id not in all_targets
+        all_targets[participant_id] = target
+    
+    return all_targets
         
 
     

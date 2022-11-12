@@ -63,4 +63,3 @@ if __name__ == '__main__':
     for file in tqdm(os.listdir(wav_folder)):
         path = os.path.join(wav_folder, file)
         create_audio_data(path, '../data/wav_files_5_seconds')
-    
