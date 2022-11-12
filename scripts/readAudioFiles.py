@@ -57,19 +57,9 @@ def convert_to_mono_channel(save_folder, load_folder):
         save_path = os.path.join(save_folder, file)
         save_wav_channel(save_path, file_path, 0)
 
-
-    # obj_new = wave.open(wav_file, 'wb')
-    # obj_new.setnchannels(obj.getnchannels())
-    # obj_new.setsampwidth(obj.getsampwidth())
-    # obj_new.setframerate(obj.getframerate())
-    # obj_new.write(obj.readframes(-1))
-
-    # obj.close()
-    # obj_new.close()
-
 if __name__ == '__main__':
-    convert_to_mono_channel('../data/wav_files_single_channel', '../data/wav_files')
     wav_folder = '../data/wav_files_single_channel/'
+    convert_to_mono_channel(wav_folder, '../data/wav_files')
     for file in tqdm(os.listdir(wav_folder)):
         path = os.path.join(wav_folder, file)
         create_audio_data(path, '../data/wav_files_5_seconds')
