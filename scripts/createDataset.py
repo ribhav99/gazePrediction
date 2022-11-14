@@ -25,6 +25,9 @@ def load_audio_data(wav_dir, participants=None):
     
     return all_mfcc
 
+def normalise_tensor(matrix):
+    return (matrix - matrix.mean(axis=0)) / matrix.std(axis=0)
+
 class AudioDataset(torch.utils.data.Dataset):
     
     def __init__(self, wav_dir, gaze_dir, audio_length=5, window_length=0.1):
@@ -71,7 +74,7 @@ class AudioDataset(torch.utils.data.Dataset):
     
 
     def __getitem__(self, idx):
-        return self.concated_mfcc[idx], self.concated_targets[idx]
+        return normalise_tensor(self.concated_mfcc[idx]), self.concated_targets[idx]
 
 
 if __name__ == '__main__':
