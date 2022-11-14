@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class CNNet(nn.Module):
     def __init__(self, config, single_datapoint_shape=(1,40,1201), target_shape=50):
@@ -19,25 +20,27 @@ class CNNet(nn.Module):
         self.conv = nn.Sequential(*self.conv_layers)
 
         fake_data = torch.ones(single_datapoint_shape)
-        print(fake_data.shape)
+        fake_data = fake_data.unsqueeze(1)
         fake_data = self.conv(fake_data)
 
-        self.fc1 = nn.Linear(torch.prod(fake_data.shape), torch.prod(fake_data.shape)//4)
-        self.fc2 = nn.Linear(torch.prod(fake_data.shape)//4, target_shape)
+        fc_input = torch.prod(torch.tensor(fake_data.shape))
+        self.fc1 = nn.Linear(fc_input, fc_input//4)
+        self.fc2 = nn.Linear(fc_input//4, target_shape)
 
 
     def forward(self, x):
+        x = x.unsqueeze(1)
         x = self.conv(x)
         x = self.fc1(x.flatten())
         x = self.fc2(x)
-        return nn.Sigmoid(x)
+        return F.sigmoid(x)
 
 if __name__ == '__main__':
     from createDataset import AudioDataset
 
     wav_5_sec_dir = '../data/wav_files_5_seconds/'
     gaze_dir = '../data/gaze_files'
-    config = {"conv_layers": [1, 4, 8, 16, 32, 64], "kernel_size": 5}
+    config = {"conv_layers": [1, 4, 8], "kernel_size": 5}
     print('Initialising Dataset')
 
     dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1)
