@@ -31,6 +31,7 @@ def normalise_tensor(matrix):
 class AudioDataset(torch.utils.data.Dataset):
     
     def __init__(self, wav_dir, gaze_dir, audio_length=5, window_length=0.1):
+        super().__init__()
         print('Initialising Targets')
         all_targets = create_targets_for_all_participants(gaze_dir, audio_length, window_length) 
         participants = [i[:i.index('.gaze')] for i in os.listdir(gaze_dir)]
@@ -51,7 +52,7 @@ class AudioDataset(torch.utils.data.Dataset):
 
         self.audio_length = audio_length
         self.window_length = window_length
-        self.size = num_x
+        self.size = sum(num_x)
 
         self.concated_mfcc = None
         self.concated_targets = None
@@ -84,4 +85,5 @@ if __name__ == '__main__':
     dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1)
 
     print(dataset.__len__())
-    print(dataset.__getitem__(420))
+    print(dataset.__getitem__(420)[0].shape)
+    print(dataset.__getitem__(420)[1].shape)
