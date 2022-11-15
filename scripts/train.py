@@ -29,7 +29,7 @@ def train(model, config, dataloader, wandb):
             torch.cuda.empty_cache()
 
             total_train_loss += loss.item()
-        total_train_loss /= len(len(dataloader))
+        total_train_loss /= len(dataloader)
 
         if config['wandb']:
             wandb.log({'training loss': total_train_loss})
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     dataloader = torch.utils.data.DataLoader(dataset,
                     batch_size=config['batch_size'],
                     shuffle=True)
-
+    
     if config['wandb']:
         wandb.login()
         wandb.init(project="gaze_prediction", config=config, save_code=True)

@@ -8,8 +8,8 @@ def export_config():
         "activation_fn": nn.ReLU(),
         "epochs": 100,
         "device": 'cuda' if torch.cuda.is_available() else 'cpu',
-        "loss_fn": nn.CrossEntropyLoss(),
+        "loss_fn": nn.MultiLabelSoftMarginLoss(),
         "learning_rate": 0.0001,
-        "batch_size": 1,
+        "batch_size": 64,
         "wandb": False
     }
