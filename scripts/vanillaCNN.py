@@ -1,9 +1,9 @@
+import sys
+sys.path.append('..')
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import sys
-sys.path.append('..')
-from config.config import export_config
+from config.config import export_config # type: ignore
 
 class CNNet(nn.Module):
     def __init__(self, config, single_datapoint_shape=(1,40,1201), target_shape=50):
