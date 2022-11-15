@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import sys
+sys.path.append('..')
+from config.config import export_config
 
 class CNNet(nn.Module):
     def __init__(self, config, single_datapoint_shape=(1,40,1201), target_shape=50):
@@ -15,7 +18,7 @@ class CNNet(nn.Module):
                 self.conv_layers.append(nn.Conv2d(in_, out_, kernel_size=kernel_size))
                 self.conv_layers.append(nn.MaxPool2d(2))
                 self.conv_layers.append(nn.BatchNorm2d(out_))
-                self.conv_layers.append(nn.ReLU())
+                self.conv_layers.append(config['activation_fn'])
 
         self.conv = nn.Sequential(*self.conv_layers)
 
@@ -40,7 +43,7 @@ if __name__ == '__main__':
 
     wav_5_sec_dir = '../data/wav_files_5_seconds/'
     gaze_dir = '../data/gaze_files'
-    config = {"conv_layers": [1, 4, 8], "kernel_size": 5}
+    config = export_config()
     print('Initialising Dataset')
 
     dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1)
