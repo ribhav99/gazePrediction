@@ -77,7 +77,7 @@ def train_model(model, config, train_data, valid_data, wandb):
             file_name = f'time={datetime.now()}_epoch={epoch}.pt'
             if old_file_name is not None:
                 os.remove(old_file_name)
-                torch.save(model.state_dict(), file_name)
+            torch.save(model.state_dict(), file_name)
             if config['wandb']:
                 wandb.save(file_name)
                 
