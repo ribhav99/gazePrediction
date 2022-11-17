@@ -13,5 +13,5 @@ def export_config():
         "batch_size": 64,
         "wandb": True,
         "load_model": False,
-        "early_stopping": True
+        "early_stopping": 5
     }
