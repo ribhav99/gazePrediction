@@ -3,8 +3,9 @@ import torch
 
 def export_config():
     return {
-        "conv_layers": [1, 4, 16, 32],
+        "conv_layers": [1, 4, 8, 16, 32],
         "kernel_size": 5,
+        "padding": 2,
         "activation_fn": nn.ReLU(),
         "epochs": 100,
         "device": 'cuda' if torch.cuda.is_available() else 'cpu',

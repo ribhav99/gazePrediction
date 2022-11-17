@@ -11,11 +11,12 @@ class CNNet(nn.Module):
         self.conv_layers = []
         conv_layers = config['conv_layers']
         kernel_size = config['kernel_size']
+        padding = config['padding']
         for i in range(len(conv_layers)):
             if i < len(conv_layers) - 1:
                 in_ = conv_layers[i]
                 out_ = conv_layers[i+1]
-                self.conv_layers.append(nn.Conv2d(in_, out_, kernel_size=kernel_size))
+                self.conv_layers.append(nn.Conv2d(in_, out_, kernel_size=kernel_size, padding=2))
                 self.conv_layers.append(nn.MaxPool2d(2))
                 self.conv_layers.append(nn.BatchNorm2d(out_))
                 self.conv_layers.append(config['activation_fn'])
