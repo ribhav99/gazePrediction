@@ -17,5 +17,5 @@ def export_config():
         "wandb": True,
         "load_model": False,
         "early_stopping": 5,
-        "window_length": 0.01
+        "window_length": 0.1
     }
