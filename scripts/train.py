@@ -111,12 +111,18 @@ def validation_confusion_matrix(model_path, valid_data, config, wandb):
         with torch.no_grad():
             X, Y = X.to(device), Y.to(device)
             pred = model(X)
-            all_targets += [int(t.item()) for t in Y]
-            all_predictions += [round(o.item()) for o in pred]
+
+            # for t in Y:
+            #     all_targets += [i for i in t]
+            # for o in pred:
+            #     all_predictions += [torch.round(i) for i in o]
+            all_targets += torch.flatten(Y).cpu()
+            all_predictions += torch.flatten(pred).cpu()
 
             del X, Y, pred
             torch.cuda.empty_cache()
 
+    all_predictions = [torch.round(i) for i in all_predictions]
     cm = metrics.confusion_matrix(all_targets, all_predictions)
     mets = metrics.classification_report(all_targets, all_predictions)
     print(mets)
@@ -155,5 +161,6 @@ if __name__ == '__main__':
         wandb = None
 
     
-    best_model_name = train_model(model, config, train_dataloader, valid_dataloader, wandb)
+    # best_model_name = train_model(model, config, train_dataloader, valid_dataloader, wandb)
+    best_model_name = 'time=2022-11-17 06:57:42.718110_epoch=100.pt'
     validation_confusion_matrix(best_model_name, valid_dataloader, config, wandb)

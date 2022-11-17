@@ -38,6 +38,14 @@ class CNNet(nn.Module):
         x = self.fc1(x)
         x = self.fc2(x)
         return F.sigmoid(x)
+    
+    def load_weights(self, pretrained_dict):
+    #   not_copy = set(['fc.weight', 'fc.bias'])
+        not_copy = set()
+        model_dict = self.state_dict()
+        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k not in not_copy}
+        model_dict.update(pretrained_dict)
+        self.load_state_dict(model_dict)
 
 if __name__ == '__main__':
     from createDataset import AudioDataset
