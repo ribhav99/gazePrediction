@@ -17,7 +17,7 @@ def find_path(file, folder):
       if path:
         return path
 
-def train(model, config, train_data, valid_data, wandb):
+def train_model(model, config, train_data, valid_data, wandb):
     optimiser = torch.optim.Adam(model.parameters(), lr=config["learning_rate"])
     device = config['device']
     loss_fn = config['loss_fn']
@@ -69,11 +69,17 @@ def train(model, config, train_data, valid_data, wandb):
         valid_loss.append(total_valid_loss)
 
         if total_valid_loss == min(valid_loss):
+            try:
+                old_file_name = file_name
+            except:
+                old_file_name = None
             file_name = f'time={datetime.now()}_epoch={epoch}.pt'
             if config['wandb']:
                 wandb.save(file_name)
             else:
-                torch.save(model.state_dict(), file_name)
+                if old_file_name is not None:
+                    os.remove(os.path.join('..', 'models', old_file_name))
+                torch.save(model.state_dict(), os.path.join('..', 'models', file_name))
                 
         if config['early_stopping']:
             if epoch > 1:
@@ -91,7 +97,8 @@ def validation_confusion_matrix(model_path, valid_data, config, wandb):
     if config['wandb']:
         wandb.restore(model_path, run_path='ribhav99/gaze_prediction/30utm6c5')
         model_path = find_path(model_path, '/content/wandb')
-        
+    else:
+        model_path = os.path.join('..', 'models', model_path)
     pretrained_dict = torch.load(model_path, map_location=config['device'])
     model.load_weights(pretrained_dict)
     model.to(config['device'])
@@ -147,5 +154,6 @@ if __name__ == '__main__':
     else:
         wandb = None
 
-    best_model_name = train(model, config, train_dataloader, valid_dataloader, wandb)
+    
+    best_model_name = train_model(model, config, train_dataloader, valid_dataloader, wandb)
     validation_confusion_matrix(best_model_name, valid_dataloader, config, wandb)
