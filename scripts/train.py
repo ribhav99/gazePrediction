@@ -72,8 +72,6 @@ def train_model(model, config, train_data, valid_data, wandb):
         if total_valid_loss == min(valid_loss):
             file_name = f'time={datetime.now()}_epoch={epoch}.pt'
             torch.save(model.state_dict(), file_name)
-            if config['wandb']:
-                wandb.save(file_name)
                 
                 
         if config['early_stopping']:
@@ -86,6 +84,9 @@ def train_model(model, config, train_data, valid_data, wandb):
             if count == config['early_stopping']:
                 print('\n\nStopping early due to decrease in performance on validation set\n\n')
                 break 
+        
+    if config['wandb']:
+        wandb.save(file_name)
     return file_name  
 
 def validation_confusion_matrix(model_path, valid_data, config, wandb, run_obj):
