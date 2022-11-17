@@ -53,11 +53,11 @@ if __name__ == '__main__':
     wav_5_sec_dir = '../data/wav_files_5_seconds/'
     gaze_dir = '../data/gaze_files'
     config = export_config()
+    
+    model = CNNet(config)
     print('Initialising Dataset')
-
     dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True)
-    model = CNNet(config)
 
     for batch, (x, y) in enumerate(dataloader):
         print(x.shape, y.shape)
