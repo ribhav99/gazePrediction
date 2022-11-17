@@ -3,7 +3,7 @@ import torch
 
 def export_config():
     return {
-        "conv_layers": [1, 4, 8, 16, 32],
+        "conv_layers": [1, 8, 16, 32, 64, 128],
         "kernel_size": 5,
         "padding": 2,
         "activation_fn": nn.ReLU(),
