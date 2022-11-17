@@ -58,7 +58,7 @@ def train_model(model, config, train_data, valid_data, wandb):
                 total_valid_loss += loss.item()
 
                 del X, Y, pred
-                torch.cuda.eos.remove all files with certain extension pythonmpty_cache()
+                torch.cuda.empty_cache()
 
                 
         total_valid_loss /= len(valid_data)
