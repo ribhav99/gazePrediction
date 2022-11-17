@@ -41,25 +41,24 @@ def train_model(model, config, train_data, valid_data, wandb):
             loss = loss_fn(pred, Y)
             loss.backward()
             optimiser.step()
-            total_train_loss += loss.item()
 
             del X, Y, pred
             torch.cuda.empty_cache()
 
-            
+            total_train_loss += loss.item()
         total_train_loss /= len(train_data)
 
         for _, (X, Y) in enumerate(valid_data):
             with torch.no_grad():
                 X, Y = X.to(device), Y.to(device)
+                optimiser.zero_grad()
                 pred = model(X)
                 loss = loss_fn(pred, Y)
-                total_valid_loss += loss.item()
-                
+
                 del X, Y, pred
                 torch.cuda.empty_cache()
 
-                
+                total_train_loss += loss.item()
         total_valid_loss /= len(valid_data)
 
         if config['wandb']:
