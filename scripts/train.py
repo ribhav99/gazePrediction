@@ -6,6 +6,7 @@ from tqdm import trange
 import os
 from datetime import datetime
 from sklearn import metrics
+import shutil
 from config.config import export_config # type: ignore
 
 def find_path(file, folder):
@@ -57,7 +58,7 @@ def train_model(model, config, train_data, valid_data, wandb):
                 total_valid_loss += loss.item()
 
                 del X, Y, pred
-                torch.cuda.empty_cache()
+                torch.cuda.eos.remove all files with certain extension pythonmpty_cache()
 
                 
         total_valid_loss /= len(valid_data)
@@ -157,5 +158,7 @@ if __name__ == '__main__':
     
     best_model_name = train_model(model, config, train_dataloader, valid_dataloader, wandb)
     validation_confusion_matrix(best_model_name, valid_dataloader, config, wandb, run_obj)
-    os.system('cmd /c rm *.pt')
-    os.system('cmd /c rm -r wandb')
+    for f in os.listdir('.'):
+        if f.endswith('.pt'):
+            os.remove(f)
+    shutil.rmtree('wandb')
