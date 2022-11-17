@@ -132,7 +132,7 @@ if __name__ == '__main__':
     gaze_dir = '../data/gaze_files'
     config = export_config()
     model = CNNet(config)
-    all_data = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1)
+    all_data = AudioDataset(wav_5_sec_dir, gaze_dir, 5, config['window_length'])
     valid_size = len(all_data) // 5
     torch.manual_seed(6)
     train, valid = torch.utils.data.random_split(all_data, [len(all_data) - valid_size, valid_size])
