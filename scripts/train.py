@@ -55,7 +55,7 @@ def train_model(model, config, train_data, valid_data, wandb):
                 pred = model(X)
                 loss = loss_fn(pred, Y)
                 total_valid_loss += loss.item()
-                
+
                 del X, Y, pred
                 torch.cuda.empty_cache()
 
@@ -94,9 +94,9 @@ def train_model(model, config, train_data, valid_data, wandb):
                 break 
     return file_name  
 
-def validation_confusion_matrix(model_path, valid_data, config, wandb):
+def validation_confusion_matrix(model_path, valid_data, config, wandb, run_obj):
     if config['wandb']:
-        wandb.restore(model_path, run_path='ribhav99/gaze_prediction/30utm6c5')
+        wandb.restore(model_path, run_path=f'ribhav99/gaze_prediction/{run_obj.id}')
         model_path = find_path(model_path, '/content/wandb')
     else:
         model_path = os.path.join('..', 'models', model_path)
@@ -148,19 +148,19 @@ if __name__ == '__main__':
     if config['wandb']:
         wandb.login()
         if config["load_model"]:
-            wandb.init(project="gaze_prediction", config=config, save_code=True, resume='allow', id='1frbu4kq')
+            run_obj = wandb.init(project="gaze_prediction", config=config, save_code=True, resume='allow', id='1frbu4kq')
             checkpoint_name = 'time=2022-11-16 18:13:12.586469_epoch=11.pt'
             wandb.restore(checkpoint_name,
-                                    run_path='ribhav99/gaze_prediction/30utm6c5')
+                                    run_path=f'ribhav99/gaze_prediction/{run_obj.id}')
             checkpoint_path = find_path(checkpoint_name, '/content/wandb')
             pretrained_dict = torch.load(checkpoint_path, map_location=config['device'])
             model.load_weights(pretrained_dict)
             model.to(config['device'])
         else:
-            wandb.init(project="gaze_prediction", config=config, save_code=True)
+            run_obj = wandb.init(project="gaze_prediction", config=config, save_code=True)
     else:
         wandb = None
 
     
     best_model_name = train_model(model, config, train_dataloader, valid_dataloader, wandb)
-    validation_confusion_matrix(best_model_name, valid_dataloader, config, wandb)
+    validation_confusion_matrix(best_model_name, valid_dataloader, config, wandb, run_obj)
