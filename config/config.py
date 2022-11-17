@@ -9,7 +9,7 @@ def export_config():
         "epochs": 100,
         "device": 'cuda' if torch.cuda.is_available() else 'cpu',
         "loss_fn": nn.MultiLabelSoftMarginLoss(),
-        "learning_rate": 0.001,
+        "learning_rate": 0.00001,
         "batch_size": 64,
         "wandb": True,
         "load_model": False,
