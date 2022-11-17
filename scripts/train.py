@@ -131,7 +131,7 @@ if __name__ == '__main__':
     wav_5_sec_dir = '../data/wav_files_5_seconds/'
     gaze_dir = '../data/gaze_files'
     config = export_config()
-    model = CNNet(config)
+    model = CNNet(config, target_shape=int(5/config["window_length"]))
     all_data = AudioDataset(wav_5_sec_dir, gaze_dir, 5, config['window_length'])
     valid_size = len(all_data) // 5
     torch.manual_seed(6)

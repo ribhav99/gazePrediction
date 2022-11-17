@@ -16,7 +16,7 @@ class CNNet(nn.Module):
             if i < len(conv_layers) - 1:
                 in_ = conv_layers[i]
                 out_ = conv_layers[i+1]
-                self.conv_layers.append(nn.Conv2d(in_, out_, kernel_size=kernel_size, padding=2))
+                self.conv_layers.append(nn.Conv2d(in_, out_, kernel_size=kernel_size, padding=padding))
                 if config['pool'] is not None:
                     self.conv_layers.append(config['pool'])
                 self.conv_layers.append(nn.BatchNorm2d(out_))
@@ -56,12 +56,12 @@ if __name__ == '__main__':
     gaze_dir = '../data/gaze_files'
     config = export_config()
     
-    model = CNNet(config)
+    model = CNNet(config, target_shape=int(5/config["window_length"]))
     print('Initialising Dataset')
-    dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1)
+    dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, config['window_length'])
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True)
 
     for batch, (x, y) in enumerate(dataloader):
         print(x.shape, y.shape)
-        print(model(x))
+        print(model(x).shape)
         break
