@@ -17,7 +17,8 @@ class CNNet(nn.Module):
                 in_ = conv_layers[i]
                 out_ = conv_layers[i+1]
                 self.conv_layers.append(nn.Conv2d(in_, out_, kernel_size=kernel_size, padding=2))
-                self.conv_layers.append(nn.MaxPool2d(2))
+                if config['pool'] is not None:
+                    self.conv_layers.append(config['pool'])
                 self.conv_layers.append(nn.BatchNorm2d(out_))
                 self.conv_layers.append(config['activation_fn'])
 
