@@ -75,12 +75,12 @@ def train_model(model, config, train_data, valid_data, wandb):
             except:
                 old_file_name = None
             file_name = f'time={datetime.now()}_epoch={epoch}.pt'
+            if old_file_name is not None:
+                os.remove(old_file_name)
+                torch.save(model.state_dict(), file_name)
             if config['wandb']:
                 wandb.save(file_name)
-            else:
-                if old_file_name is not None:
-                    os.remove(os.path.join('..', 'models', old_file_name))
-                torch.save(model.state_dict(), os.path.join('..', 'models', file_name))
+                
                 
         if config['early_stopping']:
             if epoch > 1:
@@ -98,8 +98,6 @@ def validation_confusion_matrix(model_path, valid_data, config, wandb, run_obj):
     if config['wandb']:
         wandb.restore(model_path, run_path=f'ribhav99/gaze_prediction/{run_obj.id}')
         model_path = find_path(model_path, '/content/wandb')
-    else:
-        model_path = os.path.join('..', 'models', model_path)
     pretrained_dict = torch.load(model_path, map_location=config['device'])
     model.load_weights(pretrained_dict)
     model.to(config['device'])
