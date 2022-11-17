@@ -11,5 +11,6 @@ def export_config():
         "loss_fn": nn.MultiLabelSoftMarginLoss(),
         "learning_rate": 0.0001,
         "batch_size": 64,
-        "wandb": False
+        "wandb": False,
+        "load_model": False
     }

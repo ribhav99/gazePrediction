@@ -3,7 +3,17 @@ sys.path.append('..')
 import torch
 import wandb
 from tqdm import trange
+import os
 from config.config import export_config # type: ignore
+
+def find_path(file, folder):
+  for f in os.listdir(folder):
+    if f == file:
+      return os.path.join(folder, file)
+    if os.path.isdir(os.path.join(folder, f)):
+      path = find_path(file, os.path.join(folder, f))
+      if path:
+        return path
 
 def train(model, config, dataloader, wandb):
     optimiser = torch.optim.Adam(model.parameters(), lr=config["learning_rate"])
@@ -50,7 +60,17 @@ if __name__ == '__main__':
     
     if config['wandb']:
         wandb.login()
-        wandb.init(project="gaze_prediction", config=config, save_code=True)
+        if config["load_model"]:
+            wandb.init(project="gaze_prediction", config=config, save_code=True, resume='allow', id='1frbu4kq')
+            checkpoint_name = 'time=2022-11-16 18:13:12.586469_epoch=11.pt'
+            wandb.restore(checkpoint_name,
+                                    run_path='ribhav99/gaze_prediction/30utm6c5')
+            checkpoint_path = find_path(checkpoint_name, '/content/wandb')
+            pretrained_dict = torch.load(checkpoint_path, map_location=config['device'])
+            model.load_weights(pretrained_dict)
+            model.to(config['device'])
+        else:
+            wandb.init(project="gaze_prediction", config=config, save_code=True)
     else:
         wandb = None
 
