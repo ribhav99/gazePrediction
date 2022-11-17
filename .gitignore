@@ -1,2 +1,4 @@
 data/*
 models/*
+scripts/wandb/*
+scripts/__pycache__/*
