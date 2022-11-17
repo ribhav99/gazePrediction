@@ -12,5 +12,6 @@ def export_config():
         "learning_rate": 0.0001,
         "batch_size": 64,
         "wandb": False,
-        "load_model": False
+        "load_model": False,
+        "early_stopping": True
     }
