@@ -6,7 +6,6 @@ from tqdm import trange
 import os
 from datetime import datetime
 from sklearn import metrics
-import shutil
 from config.config import export_config # type: ignore
 
 def find_path(file, folder):
@@ -159,6 +158,5 @@ if __name__ == '__main__':
     best_model_name = train_model(model, config, train_dataloader, valid_dataloader, wandb)
     validation_confusion_matrix(best_model_name, valid_dataloader, config, wandb, run_obj)
     for f in os.listdir('.'):
-        if f.endswith('.pt'):
+        if f.endswith('.pt') and f != best_model_name:
             os.remove(f)
-    shutil.rmtree('wandb')
