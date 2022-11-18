@@ -2,6 +2,8 @@ import wave
 import numpy as np
 import os
 from tqdm import tqdm
+import warnings
+warnings.filterwarnings("ignore") 
 
 def save_wav_channel(save_path, load_path, channel):
     wav = wave.open(load_path, 'rb')
@@ -29,6 +31,18 @@ def save_wav_channel(save_path, load_path, channel):
     wav.close()
 
 
+def convert_to_mono_channel(save_folder, load_folder, channel):
+    if not os.path.isdir(save_folder):
+        os.mkdir(save_folder)
+    for file in tqdm(os.listdir(load_folder)):
+        file_path = os.path.join(load_folder, file)
+        if channel == 0:
+            save_path = os.path.join(save_folder, 'channel_0_' + file)
+        else:
+            save_path = os.path.join(save_folder, 'channel_1_'+ file)
+        save_wav_channel(save_path, file_path, channel)
+
+
 def create_audio_data(file_path, save_folder, audio_length=5):
     if not os.path.isdir(save_folder):
         os.mkdir(save_folder)
@@ -37,7 +51,6 @@ def create_audio_data(file_path, save_folder, audio_length=5):
     frames_per_second_for_reading = wav.getframerate() * wav.getsampwidth()
     frames = wav.readframes(-1)
 
-    # print(frames_per_second_for_reading * length, len(wav.readframes(-1)))
     for i in range(int(length/audio_length)):
         file_name = os.path.basename(file_path)
         save_path = os.path.join(save_folder, f'_Number_{i}_{file_name}')
@@ -48,18 +61,10 @@ def create_audio_data(file_path, save_folder, audio_length=5):
         outwav.close()
     wav.close()
 
-
-def convert_to_mono_channel(save_folder, load_folder):
-    if not os.path.isdir(save_folder):
-        os.mkdir(save_folder)
-    for file in tqdm(os.listdir(load_folder)):
-        file_path = os.path.join(load_folder, file)
-        save_path = os.path.join(save_folder, file)
-        save_wav_channel(save_path, file_path, 0)
-
 if __name__ == '__main__':
     wav_folder = '../data/wav_files_single_channel/'
-    convert_to_mono_channel(wav_folder, '../data/wav_files')
+    convert_to_mono_channel(wav_folder, '../data/wav_files', 0)
+    convert_to_mono_channel(wav_folder, '../data/wav_files', 1)
     for file in tqdm(os.listdir(wav_folder)):
         path = os.path.join(wav_folder, file)
         create_audio_data(path, '../data/wav_files_5_seconds')
