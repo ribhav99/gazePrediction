@@ -10,18 +10,18 @@ warnings.filterwarnings("ignore")
 def load_audio_data(wav_dir, participants=None):
     all_mfcc = {}
     for file_name in tqdm(sorted(os.listdir(wav_dir), key=utils.sort_name_by_part_number)):
-        participant = utils.get_participant_id_from_audio_clips(file_name)
-        
+        participant, channel = utils.get_participant_id_from_audio_clips(file_name)
+        full_key = participant + '_' + channel
         if participants is not None:
             if participant not in participants:
                 continue
 
         waveform, sample_rate = torchaudio.load(os.path.join(wav_dir, file_name))
         mfcc_spectogram = torchaudio.transforms.MFCC(sample_rate=sample_rate)(waveform)
-        if participant not in all_mfcc:
-            all_mfcc[participant] = mfcc_spectogram
+        if full_key not in all_mfcc:
+            all_mfcc[full_key] = mfcc_spectogram
         else:
-            all_mfcc[participant] = torch.cat([all_mfcc[participant], mfcc_spectogram], dim=0)
+            all_mfcc[full_key] = torch.cat([all_mfcc[full_key], mfcc_spectogram], dim=0)
     
     return all_mfcc
 
@@ -37,7 +37,6 @@ class AudioDataset(torch.utils.data.Dataset):
         participants = [i[:i.index('.gaze')] for i in os.listdir(gaze_dir)]
         print('Initialising Data')
         all_mfcc = load_audio_data(wav_dir, participants)
-
         to_delete = []
         for key in all_mfcc:
             if key not in all_targets:
