@@ -1,5 +1,8 @@
+import sys
+sys.path.append('..')
 import torch.nn as nn
 import torch
+from scripts import utils # type: ignore
 
 def export_config():
     return {
@@ -11,7 +14,9 @@ def export_config():
         # "pool": None,
         "epochs": 100,
         "device": 'cuda' if torch.cuda.is_available() else 'cpu',
-        "loss_fn": nn.MultiLabelSoftMarginLoss(),
+        # "loss_fn": nn.MultiLabelSoftMarginLoss(),
+        # "loss_fn": nn.BCELoss(),
+        "loss_fn": utils.weighted_binary_cross_entropy,
         "learning_rate": 0.00001,
         "batch_size": 64,
         "wandb": True,
