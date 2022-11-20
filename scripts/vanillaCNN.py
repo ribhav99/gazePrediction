@@ -51,6 +51,7 @@ class CNNet(nn.Module):
 
 if __name__ == '__main__':
     from createDataset import AudioDataset
+    import matplotlib.pyplot as plt
 
     wav_5_sec_dir = '../data/wav_files_5_seconds/'
     gaze_dir = '../data/gaze_files'
@@ -60,8 +61,11 @@ if __name__ == '__main__':
     print('Initialising Dataset')
     dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, config['window_length'])
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True)
-
+    
     for batch, (x, y) in enumerate(dataloader):
         print(x.shape, y.shape)
-        print(model(x).shape)
-        break
+        pred = model(x)
+        print(pred.shape)
+        plt.plot(pred.detach().numpy().flatten(), label="prediction")
+        plt.plot(y.detach().numpy().flatten(), label="target")
+        plt.show()

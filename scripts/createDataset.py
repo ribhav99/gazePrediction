@@ -82,5 +82,8 @@ if __name__ == '__main__':
     dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1)
 
     print(dataset.__len__())
-    print(dataset.__getitem__(420)[0].shape)
-    print(dataset.__getitem__(420)[1].shape)
+    x, y = dataset.__getitem__(420)
+    print(x.shape)
+    print(y.shape)
+
+    
