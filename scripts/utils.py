@@ -25,3 +25,7 @@ def weighted_binary_cross_entropy(output, target, weights=[57600/(2*21272), 5760
         loss = target * torch.log(output) + (1 - target) * torch.log(1 - output)
 
     return torch.neg(torch.mean(loss))
+
+
+def normalise_tensor(matrix):
+    return (matrix - matrix.mean(axis=0)) / matrix.std(axis=0)
