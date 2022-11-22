@@ -61,7 +61,8 @@ model.to(config['device'])
 validation_confusion_matrix(checkpoint_name, valid_dataloader, config, wandb, run_obj, model)
 
 # Why does this not work
-for batch, (x, y) in enumerate(all_data):
+all_data_dataloader = torch.utils.data.DataLoader(all_data, batch_size=1, shuffle=True)
+for batch, (x, y) in enumerate(all_data_dataloader):
     print(x.shape, y.shape)
     pred = model(x)
     print(pred.shape)
