@@ -22,7 +22,7 @@ def load_audio_data(wav_dir, participants=None, time_step=0.1):
         snd = parselmouth.Sound(os.path.join(wav_dir, file_name))
         intensity = torch.tensor(snd.to_intensity(time_step=time_step).values).flatten()
         to_pad = mfcc_spectogram.shape[2] - intensity.shape[0]
-        intensity = torch.cat([intensity, torch.zeros(to_pad)], 0)
+        intensity = torch.cat([intensity, torch.zeros(to_pad)], 0).to(torch.float32)
         mfcc_spectogram = torch.cat([mfcc_spectogram, intensity.unsqueeze(0).unsqueeze(0)], 1)
         if full_key not in all_mfcc:
             all_mfcc[full_key] = mfcc_spectogram
@@ -93,5 +93,6 @@ if __name__ == '__main__':
     x, y = dataset.__getitem__(420)
     print(x.shape)
     print(y.shape)
-
+    print(x.dtype)
+    print(y.dtype)
     

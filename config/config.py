@@ -23,5 +23,5 @@ def export_config():
         "load_model": False,
         "early_stopping": 5,
         "window_length": 0.1,
-        "time_step": 0.1
+        "time_step": 0.1 # window_length / this shoulkd be <= 1201 (for 5 sec samples)
     }
