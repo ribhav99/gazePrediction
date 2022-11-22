@@ -1,4 +1,6 @@
 import torch
+import os
+
 
 def get_participant_id_from_audio_clips(file_name):
     start_index = file_name.rfind('_') + 1
@@ -29,3 +31,13 @@ def weighted_binary_cross_entropy(output, target, weights=[57600/(2*21272), 5760
 
 def normalise_tensor(matrix):
     return (matrix - matrix.mean(axis=0)) / matrix.std(axis=0)
+
+
+def find_path(file, folder):
+  for f in os.listdir(folder):
+    if f == file:
+      return os.path.join(folder, file)
+    if os.path.isdir(os.path.join(folder, f)):
+      path = find_path(file, os.path.join(folder, f))
+      if path:
+        return path

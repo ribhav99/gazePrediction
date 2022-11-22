@@ -6,16 +6,8 @@ from tqdm import trange
 import os
 from datetime import datetime
 from sklearn import metrics
+import utils
 from config.config import export_config # type: ignore
-
-def find_path(file, folder):
-  for f in os.listdir(folder):
-    if f == file:
-      return os.path.join(folder, file)
-    if os.path.isdir(os.path.join(folder, f)):
-      path = find_path(file, os.path.join(folder, f))
-      if path:
-        return path
 
 def train_model(model, config, train_data, valid_data, wandb):
     optimiser = torch.optim.Adam(model.parameters(), lr=config["learning_rate"])
@@ -89,10 +81,10 @@ def train_model(model, config, train_data, valid_data, wandb):
         wandb.save(file_name)
     return file_name  
 
-def validation_confusion_matrix(model_path, valid_data, config, wandb, run_obj):
+def validation_confusion_matrix(model_name, valid_data, config, wandb, run_obj, model):
     if config['wandb']:
-        wandb.restore(model_path, run_path=f'ribhav99/gaze_prediction/{run_obj.id}')
-        model_path = find_path(model_path, 'wandb')
+        wandb.restore(model_name, run_path=f'ribhav99/gaze_prediction/{run_obj.id}')
+        model_path = utils.find_path(model_name, 'wandb')
     pretrained_dict = torch.load(model_path, map_location=config['device'])
     model.load_weights(pretrained_dict)
     model.to(config['device'])
@@ -143,7 +135,7 @@ if __name__ == '__main__':
             checkpoint_name = 'time=2022-11-16 18:13:12.586469_epoch=11.pt'
             wandb.restore(checkpoint_name,
                                     run_path=f'ribhav99/gaze_prediction/{run_obj.id}')
-            checkpoint_path = find_path(checkpoint_name, '/content/wandb')
+            checkpoint_path = utils.find_path(checkpoint_name, 'wandb')
             pretrained_dict = torch.load(checkpoint_path, map_location=config['device'])
             model.load_weights(pretrained_dict)
             model.to(config['device'])
