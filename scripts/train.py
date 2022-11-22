@@ -138,7 +138,8 @@ if __name__ == '__main__':
     if config['wandb']:
         wandb.login()
         if config["load_model"]:
-            run_obj = wandb.init(project="gaze_prediction", config=config, save_code=True, resume='allow', id='1frbu4kq')
+            run_obj = wandb.init(project="gaze_prediction", config=config, save_code=True,
+                resume='allow', id='1frbu4kq')
             checkpoint_name = 'time=2022-11-16 18:13:12.586469_epoch=11.pt'
             wandb.restore(checkpoint_name,
                                     run_path=f'ribhav99/gaze_prediction/{run_obj.id}')
