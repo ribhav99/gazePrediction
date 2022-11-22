@@ -41,4 +41,11 @@ if __name__ == '__main__':
         except:
             pass
     
-    print(type(d['conv_layers'][0]))
+    print(type(d['pool']))
+    print(d['pool'])
+
+    # import torch
+    # print(torch.cuda.is_available())
+    # x = []
+    # y = torch.ones(5).tolist()
+    # print(x + y)

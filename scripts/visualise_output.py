@@ -60,12 +60,18 @@ model.to(config['device'])
 
 validation_confusion_matrix(checkpoint_name, valid_dataloader, config, wandb, run_obj, model)
 
-# Why does this not work
+preds = []
+targs = []
 all_data_dataloader = torch.utils.data.DataLoader(all_data, batch_size=1, shuffle=True)
 for batch, (x, y) in enumerate(all_data_dataloader):
-    print(x.shape, y.shape)
+    x = x.to(config['device'])
     pred = model(x)
-    print(pred.shape)
-    plt.plot(pred.detach().numpy().flatten(), label="prediction")
-    plt.plot(y.detach().numpy().flatten(), label="target")
-    plt.show()
+    targs += y.detach().numpy().flatten().tolist()
+    preds += pred.cpu().detach().numpy().flatten().tolist()
+
+#     plt.plot(pred.cpu().detach().numpy().flatten(), label="prediction")
+#     plt.plot(y.detach().numpy().flatten(), label="target")
+#     plt.show()
+plt.plot(preds, label="prediction")
+plt.plot(targs, label="target")
+plt.show()
