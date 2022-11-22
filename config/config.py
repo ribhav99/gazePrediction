@@ -10,7 +10,7 @@ def export_config():
         "kernel_size": 5,
         "padding": 2,
         "activation_fn": nn.ReLU(),
-        "pool": nn.MaxPool2d(2),
+        "pool": nn.AvgPool2d(2),
         # "pool": None,
         "epochs": 100,
         "device": 'cuda' if torch.cuda.is_available() else 'cpu',
@@ -22,5 +22,6 @@ def export_config():
         "wandb": True,
         "load_model": False,
         "early_stopping": 5,
-        "window_length": 0.1
+        "window_length": 0.1,
+        "time_step": 0.1
     }

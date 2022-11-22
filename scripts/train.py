@@ -105,11 +105,6 @@ def validation_confusion_matrix(model_path, valid_data, config, wandb, run_obj):
         with torch.no_grad():
             X, Y = X.to(device), Y.to(device)
             pred = model(X)
-
-            # for t in Y:
-            #     all_targets += [i for i in t]
-            # for o in pred:
-            #     all_predictions += [torch.round(i) for i in o]
             all_targets += torch.flatten(Y).cpu()
             all_predictions += torch.flatten(pred).cpu()
 
@@ -131,8 +126,10 @@ if __name__ == '__main__':
     wav_5_sec_dir = '../data/wav_files_5_seconds/'
     gaze_dir = '../data/gaze_files'
     config = export_config()
-    model = CNNet(config, target_shape=int(5/config["window_length"]))
-    all_data = AudioDataset(wav_5_sec_dir, gaze_dir, 5, config['window_length'])
+    all_data = AudioDataset(wav_5_sec_dir, gaze_dir, 5, config['window_length'],
+        config['time_step'])
+    x, _ = all_data.__getitem__(0)
+    model = CNNet(config, [1] + list(x.shape), int(5/config["window_length"]))
     valid_size = len(all_data) // 5
     torch.manual_seed(6)
     train, valid = torch.utils.data.random_split(all_data, [len(all_data) - valid_size, valid_size])

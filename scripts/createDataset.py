@@ -5,9 +5,10 @@ import torch
 import warnings
 import utils
 from readGazeFiles import create_targets_for_all_participants
+import parselmouth
 warnings.filterwarnings("ignore") 
 
-def load_audio_data(wav_dir, participants=None):
+def load_audio_data(wav_dir, participants=None, time_step=0.1):
     all_mfcc = {}
     for file_name in tqdm(sorted(os.listdir(wav_dir), key=utils.sort_name_by_part_number)):
         participant, channel = utils.get_participant_id_from_audio_clips(file_name)
@@ -18,6 +19,11 @@ def load_audio_data(wav_dir, participants=None):
 
         waveform, sample_rate = torchaudio.load(os.path.join(wav_dir, file_name))
         mfcc_spectogram = torchaudio.transforms.MFCC(sample_rate=sample_rate)(waveform)
+        snd = parselmouth.Sound(os.path.join(wav_dir, file_name))
+        intensity = torch.tensor(snd.to_intensity(time_step=time_step).values).flatten()
+        to_pad = mfcc_spectogram.shape[2] - intensity.shape[0]
+        intensity = torch.cat([intensity, torch.zeros(to_pad)], 0)
+        mfcc_spectogram = torch.cat([mfcc_spectogram, intensity.unsqueeze(0).unsqueeze(0)], 1)
         if full_key not in all_mfcc:
             all_mfcc[full_key] = mfcc_spectogram
         else:
@@ -28,12 +34,13 @@ def load_audio_data(wav_dir, participants=None):
 
 class AudioDataset(torch.utils.data.Dataset):
     
-    def __init__(self, wav_dir, gaze_dir, audio_length=5, window_length=0.1):
+    def __init__(self, wav_dir, gaze_dir, audio_length=5, window_length=0.1, time_step=0.1):
         super().__init__()
         print('Initialising Targets')
         all_targets = create_targets_for_all_participants(gaze_dir, audio_length, window_length) 
         participants = [i[:i.index('.gaze')] for i in os.listdir(gaze_dir)]
         print('Initialising Data')
+        # targets_shape = int(audio_length / window_length)
         all_mfcc = load_audio_data(wav_dir, participants)
         to_delete = []
         for key in all_mfcc:
@@ -76,10 +83,11 @@ class AudioDataset(torch.utils.data.Dataset):
 
 
 if __name__ == '__main__':
+
     wav_5_sec_dir = '../data/wav_files_5_seconds/'
     gaze_dir = '../data/gaze_files'
     print('Initialising Dataset')
-    dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1)
+    dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1, 0.1)
 
     print(dataset.__len__())
     x, y = dataset.__getitem__(420)
