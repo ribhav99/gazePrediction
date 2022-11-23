@@ -1,13 +1,16 @@
 from vanillaCNN import CNNet
 from createDataset import AudioDataset
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
 import torch
 import wandb
 import utils
 import yaml
 import torch.nn as nn
 from train import validation_confusion_matrix
+import numpy as np
 from config.config import export_config # type: ignore
+
 
 wav_5_sec_dir = '../data/wav_files_5_seconds/'
 gaze_dir = '../data/gaze_files'
@@ -72,6 +75,41 @@ for batch, (x, y) in enumerate(all_data_dataloader):
 #     plt.plot(pred.cpu().detach().numpy().flatten(), label="prediction")
 #     plt.plot(y.detach().numpy().flatten(), label="target")
 #     plt.show()
-plt.plot(preds, label="prediction")
-plt.plot(targs, label="target")
+# plt.plot(preds, label="prediction")
+# plt.plot(targs, label="target")
+# plt.show()
+
+Plot, Axis = plt.subplots()
+ 
+# Adjust the bottom size according to the
+# requirement of the user
+plt.subplots_adjust(bottom=0.25)
+ 
+# Set the x_labels
+x_labels = range(len(preds))
+ 
+# plot the x and y using plot function
+l = plt.plot(x_labels, preds, label="prediction")
+l = plt.plot(x_labels, targs, label="target")
+ 
+# Choose the Slider color
+slider_color = 'White'
+ 
+# Set the axis and slider position in the plot
+axis_position = plt.axes([0.2, 0.1, 0.65, 0.03],
+                         facecolor = slider_color)
+slider_position = Slider(axis_position,
+                         'Pos', 0.1, len(preds) - 100)
+ 
+# update() function to change the graph when the
+# slider is in use
+def update(val):
+    pos = slider_position.val
+    Axis.axis([pos, pos+100, -0.25, 1.25])
+    Plot.canvas.draw_idle()
+ 
+# update function called using on_changed() function
+slider_position.on_changed(update)
+ 
+# Display the plot
 plt.show()
