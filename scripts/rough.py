@@ -27,10 +27,10 @@ if __name__ == '__main__':
     '''
     2.
     '''
-    # snd = parselmouth.Sound('../data/wav_files_5_seconds/_Number_0_channel_0_DVA1A.wav')
-    # intensity = snd.to_intensity(time_step=0.1)
-    # pitch = snd.to_pitch(time_step=0.1)
-    # print(pitch.to_array())
+    snd = parselmouth.Sound('../data/wav_files_5_seconds/_Number_0_channel_0_DVA1A.wav')
+    intensity = snd.to_intensity(time_step=0.1)
+    pitch = snd.to_pitch(time_step=0.1)
+    print(pitch.to_array().shape)
 
     '''
     3.
@@ -70,4 +70,4 @@ if __name__ == '__main__':
     # print(type(d['load_model']))
     # print(d['load_model'])
 
-    
+

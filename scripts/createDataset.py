@@ -41,7 +41,7 @@ class AudioDataset(torch.utils.data.Dataset):
         participants = [i[:i.index('.gaze')] for i in os.listdir(gaze_dir)]
         print('Initialising Data')
         # targets_shape = int(audio_length / window_length)
-        all_mfcc = load_audio_data(wav_dir, participants)
+        all_mfcc = load_audio_data(wav_dir, participants, time_step)
         to_delete = []
         for key in all_mfcc:
             if key not in all_targets:
