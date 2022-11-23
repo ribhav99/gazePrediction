@@ -146,7 +146,7 @@ if __name__ == '__main__':
 
     
     best_model_name = train_model(model, config, train_dataloader, valid_dataloader, wandb)
-    validation_confusion_matrix(best_model_name, valid_dataloader, config, wandb, run_obj)
+    validation_confusion_matrix(best_model_name, valid_dataloader, config, wandb, run_obj, model)
     for f in os.listdir('.'):
         if f.endswith('.pt') and f != best_model_name:
             os.remove(f)

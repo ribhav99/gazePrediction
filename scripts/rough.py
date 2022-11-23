@@ -30,6 +30,7 @@ if __name__ == '__main__':
     snd = parselmouth.Sound('../data/wav_files_5_seconds/_Number_0_channel_0_DVA1A.wav')
     intensity = snd.to_intensity(time_step=0.1)
     pitch = snd.to_pitch(time_step=0.1)
+    print(intensity.values.shape)
     print(pitch.to_array().shape)
 
     '''
