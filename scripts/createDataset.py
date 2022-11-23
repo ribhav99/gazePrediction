@@ -6,6 +6,7 @@ import warnings
 import utils
 from readGazeFiles import create_targets_for_all_participants
 import parselmouth
+import numpy as np
 warnings.filterwarnings("ignore") 
 
 def load_audio_data(wav_dir, participants=None, time_step=0.1):
@@ -27,6 +28,19 @@ def load_audio_data(wav_dir, participants=None, time_step=0.1):
         mfcc_spectogram = torch.cat([mfcc_spectogram, intensity.unsqueeze(0).unsqueeze(0)], 1)
         # Pitch
         pitch = snd.to_pitch(time_step=time_step).to_array()
+        new = np.zeros(list(pitch.shape) + [2])
+        newer = []
+        for i in range(pitch.shape[0]):
+            for j in range(pitch.shape[1]):
+                new[i][j][0] = pitch[i][j][0] if not np.isnan(pitch[i][j][0]) else 0
+                new[i][j][1] = pitch[i][j][1] if not np.isnan(pitch[i][j][1]) else 0
+        for i in range(new.shape[0]):
+            newer.append(new[i, :, 0])
+            newer.append(new[i, :, 1])
+        newer = torch.tensor(newer)
+        to_pad = mfcc_spectogram.shape[2] - newer.shape[1]
+        newer = torch.cat([newer, torch.zeros((newer.shape[0], to_pad))], 1).to(torch.float32)
+        mfcc_spectogram = torch.cat([mfcc_spectogram, newer.unsqueeze(0)], 1)
         if full_key not in all_mfcc:
             all_mfcc[full_key] = mfcc_spectogram
         else:
