@@ -6,6 +6,7 @@ import utils
 import yaml
 import torch
 import torch.nn as nn
+import numpy as np
 
 def get_intervals(file_path):
     tg = textgrid.openTextgrid(file_path, False)
@@ -29,9 +30,18 @@ if __name__ == '__main__':
     '''
     snd = parselmouth.Sound('../data/wav_files_5_seconds/_Number_0_channel_0_DVA1A.wav')
     intensity = snd.to_intensity(time_step=0.1)
-    pitch = snd.to_pitch(time_step=0.1)
+    pitch = snd.to_pitch(time_step=0.1).to_array()
     print(intensity.values.shape)
-    print(pitch.to_array().shape)
+    # print(pitch.squeeze(-1))
+    new = np.zeros(list(pitch.shape) + [2])
+    for i in range(pitch.shape[0]):
+        for j in range(pitch.shape[1]):
+            new[i][j][0] = pitch[i][j][0] if not np.isnan(pitch[i][j][0]) else 0
+            new[i][j][1] = pitch[i][j][1] if not np.isnan(pitch[i][j][1]) else 0
+            
+    # void = np.void((np.float64(0), np.float64(0)))
+    # pitch_array = np.where(pitch[0] == np.float64('nan'), void, pitch)
+    print(new.shape)
 
     '''
     3.

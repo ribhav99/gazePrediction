@@ -19,11 +19,14 @@ def load_audio_data(wav_dir, participants=None, time_step=0.1):
 
         waveform, sample_rate = torchaudio.load(os.path.join(wav_dir, file_name))
         mfcc_spectogram = torchaudio.transforms.MFCC(sample_rate=sample_rate)(waveform)
+        # Intensity
         snd = parselmouth.Sound(os.path.join(wav_dir, file_name))
         intensity = torch.tensor(snd.to_intensity(time_step=time_step).values).flatten()
         to_pad = mfcc_spectogram.shape[2] - intensity.shape[0]
         intensity = torch.cat([intensity, torch.zeros(to_pad)], 0).to(torch.float32)
         mfcc_spectogram = torch.cat([mfcc_spectogram, intensity.unsqueeze(0).unsqueeze(0)], 1)
+        # Pitch
+        pitch = snd.to_pitch(time_step=time_step).to_array()
         if full_key not in all_mfcc:
             all_mfcc[full_key] = mfcc_spectogram
         else:
@@ -87,7 +90,7 @@ if __name__ == '__main__':
     wav_5_sec_dir = '../data/wav_files_5_seconds/'
     gaze_dir = '../data/gaze_files'
     print('Initialising Dataset')
-    dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1, 0.1)
+    dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1, 0.01)
 
     print(dataset.__len__())
     x, y = dataset.__getitem__(420)
