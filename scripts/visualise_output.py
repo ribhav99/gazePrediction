@@ -12,9 +12,10 @@ from train import validation_confusion_matrix
 
 wav_5_sec_dir = '../data/wav_files_5_seconds/'
 gaze_dir = '../data/gaze_files'
-
+checkpoint_name = 'time=2022-11-23 10:03:58.733650_epoch=9.pt'
 run_obj = wandb.init(project="gaze_prediction", save_code=True,
-                resume='allow', id='1j3g07a6')
+                resume='allow', id='2d41vtdj')
+
 config_file_name = 'config.yaml'
 wandb.restore(config_file_name,
                         run_path=f'ribhav99/gaze_prediction/{run_obj.id}')
@@ -37,7 +38,7 @@ for key in yaml_config:
         pass
 
 config["device"] = 'cuda' if torch.cuda.is_available() else 'cpu'
-    # activation_fn
+# activation_fn
 if 'ReLU' in config["activation_fn"]:
     config["activation_fn"] = nn.ReLU()
 # pool
@@ -63,7 +64,6 @@ train, valid = torch.utils.data.random_split(all_data, [len(all_data) - valid_si
 train_dataloader = torch.utils.data.DataLoader(train, config['batch_size'], True)
 valid_dataloader = torch.utils.data.DataLoader(valid, config['batch_size'], True)
 
-checkpoint_name = 'time=2022-11-22 08:26:12.786105_epoch=10.pt'
 wandb.restore(checkpoint_name,
                         run_path=f'ribhav99/gaze_prediction/{run_obj.id}')
 checkpoint_path = utils.find_path(checkpoint_name, 'wandb')
@@ -92,8 +92,9 @@ plt.subplots_adjust(bottom=0.25)
 x_labels = range(len(preds))
  
 # plot the x and y using plot function
-l = plt.plot(x_labels, preds, label="prediction")
-l = plt.plot(x_labels, targs, label="target")
+plt.plot(x_labels, preds, label="prediction")
+plt.plot(x_labels, targs, label="target")
+plt.plot(x_labels, list(map(lambda x: 0.9 if round(x) == 1 else 0.1, preds)), label="rounded prediction")
  
 # Choose the Slider color
 slider_color = 'White'
@@ -115,4 +116,5 @@ def update(val):
 slider_position.on_changed(update)
  
 # Display the plot
+plt.legend(loc='best')
 plt.show()
