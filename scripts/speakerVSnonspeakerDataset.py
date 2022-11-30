@@ -9,14 +9,19 @@ import parselmouth
 import numpy as np
 warnings.filterwarnings("ignore") 
 
-def load_audio_data(wav_dir, participants=None, time_step=0.1):
+def load_audio_data(wav_dir, intensities, targets, participants=None, time_step=0.1, speaking_or_listening='speaking'):
     all_mfcc = {}
+    targets_progress = {}
     for file_name in tqdm(sorted(os.listdir(wav_dir), key=utils.sort_name_by_part_number)):
+        
         participant, channel = utils.get_participant_id_from_audio_clips(file_name)
         full_key = participant + '_' + channel
         if participants is not None:
             if participant not in participants:
                 continue
+
+        if full_key not in targets_progress:
+            targets_progress[full_key] = 0
 
         waveform, sample_rate = torchaudio.load(os.path.join(wav_dir, file_name))
         mfcc_spectogram = torchaudio.transforms.MFCC(sample_rate=sample_rate)(waveform)
@@ -24,8 +29,8 @@ def load_audio_data(wav_dir, participants=None, time_step=0.1):
         snd = parselmouth.Sound(os.path.join(wav_dir, file_name))
         intensity = torch.tensor(snd.to_intensity(time_step=time_step).values).flatten()
         to_pad = mfcc_spectogram.shape[2] - intensity.shape[0]
-        intensity = torch.cat([intensity, torch.zeros(to_pad)], 0).to(torch.float32)
-        mfcc_spectogram = torch.cat([mfcc_spectogram, intensity.unsqueeze(0).unsqueeze(0)], 1)
+        intensity_to_cat = torch.cat([intensity, torch.zeros(to_pad)], 0).to(torch.float32)
+        mfcc_spectogram = torch.cat([mfcc_spectogram, intensity_to_cat.unsqueeze(0).unsqueeze(0)], 1)
         # Pitch
         # pitch = snd.to_pitch(time_step=time_step).to_array()
         # new = np.zeros(list(pitch.shape) + [2])
@@ -41,24 +46,39 @@ def load_audio_data(wav_dir, participants=None, time_step=0.1):
         # to_pad = mfcc_spectogram.shape[2] - newer.shape[1]
         # newer = torch.cat([newer, torch.zeros((newer.shape[0], to_pad))], 1).to(torch.float32)
         # mfcc_spectogram = torch.cat([mfcc_spectogram, newer.unsqueeze(0)], 1)
-        if full_key not in all_mfcc:
-            all_mfcc[full_key] = mfcc_spectogram
+        snd = parselmouth.Sound(os.path.join(wav_dir, file_name))
+        intensity = torch.tensor(snd.to_intensity(time_step=0.1).values).flatten()
+        median = intensities[f'{channel}_{participant}.wav']
+        if speaking_or_listening == 'speaking':
+            relevant = sum([1 if i >= median else 0 for i in intensity]) / intensity.shape[0]
+        elif speaking_or_listening == 'listening':
+            relevant = sum([0 if i >= median else 1 for i in intensity]) / intensity.shape[0]
         else:
-            all_mfcc[full_key] = torch.cat([all_mfcc[full_key], mfcc_spectogram], dim=0)
-    
+            print('You choice must be either "speaking" or "listening"')
+        if relevant >= 0.5:
+            if full_key not in all_mfcc:
+                all_mfcc[full_key] = mfcc_spectogram
+            else:
+                all_mfcc[full_key] = torch.cat([all_mfcc[full_key], mfcc_spectogram], dim=0)
+            targets_progress[full_key] += 1
+            
+        else: 
+            t = targets[full_key]
+            targets[full_key] = torch.cat([t[:targets_progress[full_key], :], t[targets_progress[full_key]+1:, :]], axis=0)
+
     return all_mfcc
 
 
-class AudioDataset(torch.utils.data.Dataset):
+class SpeakerVSnonspeakerData(torch.utils.data.Dataset):
     
-    def __init__(self, wav_dir, gaze_dir, audio_length=5, window_length=0.1, time_step=0.1):
+    def __init__(self, wav_dir, gaze_dir, audio_length=5, window_length=0.1, time_step=0.1, speaking_or_listening='speaking'):
         super().__init__()
+        intensities = utils.get_median_intensities('../data/wav_files_single_channel')
         print('Initialising Targets')
         all_targets = create_targets_for_all_participants(gaze_dir, audio_length, window_length) 
         participants = [i[:i.index('.gaze')] for i in os.listdir(gaze_dir)]
         print('Initialising Data')
-        # targets_shape = int(audio_length / window_length)
-        all_mfcc = load_audio_data(wav_dir, participants, time_step)
+        all_mfcc = load_audio_data(wav_dir, intensities, all_targets, participants, time_step, speaking_or_listening)
         to_delete = []
         for key in all_mfcc:
             if key not in all_targets:
@@ -104,7 +124,7 @@ if __name__ == '__main__':
     wav_5_sec_dir = '../data/wav_files_5_seconds/'
     gaze_dir = '../data/gaze_files'
     print('Initialising Dataset')
-    dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1, 0.01)
+    dataset = SpeakerVSnonspeakerData(wav_5_sec_dir, gaze_dir, 5, 0.1, 0.01, 'speaking')
 
     print(dataset.__len__())
     x, y = dataset.__getitem__(420)

@@ -113,13 +113,16 @@ def validation_confusion_matrix(model_name, valid_data, config, wandb, run_obj, 
 if __name__ == '__main__':
     from vanillaCNN import CNNet
     from createDataset import AudioDataset
+    from speakerVSnonspeakerDataset import SpeakerVSnonspeakerData
 
     torch.manual_seed(6)
     wav_5_sec_dir = '../data/wav_files_5_seconds/'
     gaze_dir = '../data/gaze_files'
     config = export_config()
-    all_data = AudioDataset(wav_5_sec_dir, gaze_dir, 5, config['window_length'],
-        config['time_step'])
+    # all_data = AudioDataset(wav_5_sec_dir, gaze_dir, 5, config['window_length'],
+    #     config['time_step'])
+    all_data = SpeakerVSnonspeakerData(wav_5_sec_dir, gaze_dir, 5,
+        config['window_length'], config['time_step'], 'listening')
     x, _ = all_data.__getitem__(0)
     model = CNNet(config, [1] + list(x.shape), int(5/config["window_length"]))
     valid_size = len(all_data) // 5

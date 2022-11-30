@@ -28,25 +28,25 @@ if __name__ == '__main__':
     '''
     2.
     '''
-    snd = parselmouth.Sound('../data/wav_files_5_seconds/_Number_0_channel_0_DVA1A.wav')
-    intensity = snd.to_intensity(time_step=0.01)
-    pitch = snd.to_pitch(time_step=0.01).to_array()
-    print(intensity.values.shape)
-    # print(pitch.squeeze(-1))
-    new = np.zeros(list(pitch.shape) + [2])
-    newer = []
-    for i in range(pitch.shape[0]):
-        for j in range(pitch.shape[1]):
-            new[i][j][0] = pitch[i][j][0] if not np.isnan(pitch[i][j][0]) else 0
-            new[i][j][1] = pitch[i][j][1] if not np.isnan(pitch[i][j][1]) else 0
+    # snd = parselmouth.Sound('../data/wav_files_5_seconds/_Number_0_channel_0_DVA1A.wav')
+    # intensity = snd.to_intensity(time_step=0.01)
+    # pitch = snd.to_pitch(time_step=0.01).to_array()
+    # print(intensity.values.shape)
+    # # print(pitch.squeeze(-1))
+    # new = np.zeros(list(pitch.shape) + [2])
+    # newer = []
+    # for i in range(pitch.shape[0]):
+    #     for j in range(pitch.shape[1]):
+    #         new[i][j][0] = pitch[i][j][0] if not np.isnan(pitch[i][j][0]) else 0
+    #         new[i][j][1] = pitch[i][j][1] if not np.isnan(pitch[i][j][1]) else 0
 
-    for i in range(new.shape[0]):
-        newer.append(new[i, :, 0])
-        newer.append(new[i, :, 1])
-    # void = np.void((np.float64(0), np.float64(0)))
-    # pitch_array = np.where(pitch[0] == np.float64('nan'), void, pitch)
-    newer = np.array(newer)
-    print(newer.shape)
+    # for i in range(new.shape[0]):
+    #     newer.append(new[i, :, 0])
+    #     newer.append(new[i, :, 1])
+    # # void = np.void((np.float64(0), np.float64(0)))
+    # # pitch_array = np.where(pitch[0] == np.float64('nan'), void, pitch)
+    # newer = np.array(newer)
+    # print(newer.shape)
 
     '''
     3.
@@ -87,3 +87,10 @@ if __name__ == '__main__':
     # print(d['load_model'])
 
 
+    '''
+    4
+    '''
+    torch.set_printoptions(profile="full")
+    snd = parselmouth.Sound('../data/wav_files_single_channel/channel_0_DVA1A.wav')
+    intensity = torch.tensor(snd.to_intensity(time_step=0.1).values).flatten()
+    print(torch.median(intensity))

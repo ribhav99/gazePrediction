@@ -62,10 +62,7 @@ if __name__ == '__main__':
     dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, config['window_length'])
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True)
     
-    for batch, (x, y) in enumerate(dataloader):
-        print(x.shape, y.shape)
-        pred = model(x)
-        print(pred.shape)
-        plt.plot(pred.detach().numpy().flatten(), label="prediction")
-        plt.plot(y.detach().numpy().flatten(), label="target")
-        plt.show()
+    x, y = dataset.__getitem__(58)
+    print(x.shape, y.shape)
+    pred = model(x)
+    print(pred.shape)

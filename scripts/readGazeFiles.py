@@ -45,7 +45,8 @@ def create_targets_for_all_participants(folder_path, audio_length=5, window_leng
 
     
 if __name__ == '__main__':
-    print(create_targets('../data/gaze_files/DVA1A.gaze'))
+    torch.set_printoptions(profile="full")
+    print(create_targets('../data/gaze_files/DVA1A.gaze', 0))
     # d = create_targets_for_all_participants('../data/gaze_files')
     # for i in d:
     #     print(d[i].shape)

@@ -1,6 +1,6 @@
 import torch
 import os
-
+import parselmouth
 
 def get_participant_id_from_audio_clips(file_name):
     start_index = file_name.rfind('_') + 1
@@ -41,3 +41,13 @@ def find_path(file, folder):
       path = find_path(file, os.path.join(folder, f))
       if path:
         return path
+
+def get_median_intensities(folder):
+  intensities = {}
+  for f in os.listdir(folder):
+    path = os.path.join(folder, f)
+    snd = parselmouth.Sound(path)
+    intensity = torch.median(torch.tensor(snd.to_intensity(time_step=0.1).values).flatten())
+    intensities[f] = intensity
+  
+  return intensities
