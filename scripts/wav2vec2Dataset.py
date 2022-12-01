@@ -43,7 +43,7 @@ class AudioDataset(torch.utils.data.Dataset):
         for i in to_delete:
             del waveform[i]
         print('Finished Initialising Targets')
-        print(waveform[0].shape)
+
         num_x = [waveform[i].shape[0] for i in waveform]
         num_y = [all_targets[i].shape[0] for i in all_targets]
         assert sum(num_x) == sum(num_y)
