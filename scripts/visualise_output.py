@@ -12,9 +12,9 @@ from train import validation_confusion_matrix
 
 wav_5_sec_dir = '../data/wav_files_5_seconds/'
 gaze_dir = '../data/gaze_files'
-checkpoint_name = 'time=2022-11-23 10:03:58.733650_epoch=9.pt'
+checkpoint_name = 'time=2022-11-29 06:22:13.018369_epoch=10.pt'
 run_obj = wandb.init(project="gaze_prediction", save_code=True,
-                resume='allow', id='2d41vtdj')
+                resume='allow', id='288j7s6z')
 
 config_file_name = 'config.yaml'
 wandb.restore(config_file_name,
