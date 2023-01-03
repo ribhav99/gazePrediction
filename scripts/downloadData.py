@@ -9,7 +9,6 @@ def download_files(link, startswith=None, endswith=None):
         soup = BeautifulSoup(r.content, 'html.parser')
         for atag in tqdm(soup.find_all('a')):
             url = atag.get('href')
-
             flag = False
             if startswith is not None and url.startswith(startswith):
                 flag = True
@@ -34,5 +33,5 @@ def download_files(link, startswith=None, endswith=None):
 if __name__ == '__main__':
     speech_url = 'https://www.fon.hum.uva.nl/IFA-SpokenLanguageCorpora/IFADVcorpus/Speech/'
     annotations_url = 'https://www.fon.hum.uva.nl/IFA-SpokenLanguageCorpora/IFADVcorpus/Annotations/EAF/'
-    download_files(speech_url, startswith='DV')
-    download_files(annotations_url, endswith='gaze')
+    download_files(speech_url, endswith='wav')
+    # download_files(annotations_url, endswith='gaze')

@@ -15,8 +15,6 @@ def sort_name_by_part_number(item):
     end = item.rfind('_channel')
     start = len('_Number_')
     return int(item[start:end])
-
-
 def weighted_binary_cross_entropy(output, target, weights=[57600/(2*21272), 57600/(2*36328)]):
     if weights is not None:
         assert len(weights) == 2
