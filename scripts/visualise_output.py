@@ -118,3 +118,10 @@ slider_position.on_changed(update)
 # Display the plot
 plt.legend(loc='best')
 plt.show()
+
+# import pandas as pd
+# df = pd.DataFrame(columns=['preds', 'targs', 'rounded_preds'])
+# df.preds = preds
+# df.targs = targs
+# df.rounded_preds = list(map(lambda x: 0.9 if round(x) == 1 else 0.1, preds))
+# df.to_csv('chart.csv')
