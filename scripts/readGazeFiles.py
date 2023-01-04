@@ -1,29 +1,22 @@
-from cgitb import text
 from praatio import textgrid
-import textgrids
 from bisect import bisect
 import torch
 import os
 
 def get_intervals(file_path, channel):
-
-    grid = textgrids.TextGrid(file_path)
+    tg = textgrid.openTextgrid(file_path, False)
     if channel == 0:
-        try:
-            return grid['kijkrichting spreker1 [v] (TIE1)']
-        except:
-            return grid['kijkrichting spreker1 (TIE1)']
+        return tg.tierDict['kijkrichting spreker1 [v] (TIE1)'].entryList
     else:
-        try:
-            return grid['kijkrichting spreker2 [v] (TIE3)']        
-        except:
-            return grid['kijkrichting spreker2 (TIE3)']
+        return tg.tierDict['kijkrichting spreker2 [v] (TIE3)'].entryList
+    
+
 def create_targets(file_path, channel, audio_length=5, window_length=0.1):
     # assert audio_length % window_length == 0
     intervals = get_intervals(file_path, channel)
-    intervals_start = [i.xmin for i in intervals]
-    num_clips = int(intervals[-1].xmax // audio_length)
-    # num_clips = 180 # Bad practice but this is True
+    intervals_start = [i.start for i in intervals]
+    # num_clips = int(intervals[-1].end // audio_length)
+    num_clips = 180 # Bad practice but this is True
     num_windows_in_clip = int(audio_length / window_length)
     targets = torch.zeros([num_clips, num_windows_in_clip])
 
@@ -31,8 +24,7 @@ def create_targets(file_path, channel, audio_length=5, window_length=0.1):
         for window in range(num_windows_in_clip):
             time = (clip * audio_length) + (window * window_length)
             index =  bisect(intervals_start, time)
-            # g is gaze, x is aversion
-            target = 1 if intervals[index-1].text == 'g' else 0
+            target = 1 if intervals[index-1].label == 'g' else 0
             targets[clip][window] = target
 
     return targets
@@ -47,7 +39,7 @@ def create_targets_for_all_participants(folder_path, audio_length=5, window_leng
             target = create_targets(path, channel, audio_length, window_length)
             assert participant_id not in all_targets
             all_targets[participant_id] = target
-        
+    
     return all_targets
         
 

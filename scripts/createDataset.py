@@ -5,7 +5,6 @@ import torch
 import warnings
 import utils
 from readGazeFiles import create_targets_for_all_participants
-from readAudioFiles import convert_to_mono_channel, create_audio_data
 import parselmouth
 import numpy as np
 warnings.filterwarnings("ignore") 
@@ -46,9 +45,12 @@ def load_audio_data(wav_dir, participants=None, time_step=0.1):
             all_mfcc[full_key] = mfcc_spectogram
         else:
             all_mfcc[full_key] = torch.cat([all_mfcc[full_key], mfcc_spectogram], dim=0)
+    
     return all_mfcc
 
+
 class AudioDataset(torch.utils.data.Dataset):
+    
     def __init__(self, wav_dir, gaze_dir, audio_length=5, window_length=0.1, time_step=0.1):
         super().__init__()
         print('Initialising Targets')
@@ -64,9 +66,9 @@ class AudioDataset(torch.utils.data.Dataset):
                 to_delete.append(key)
         for i in to_delete:
             del all_mfcc[i]
+        
         num_x = [all_mfcc[i].shape[0] for i in all_mfcc]
         num_y = [all_targets[i].shape[0] for i in all_targets]
-        print(sum(num_x), sum(num_y))
         assert sum(num_x) == sum(num_y)
 
         self.audio_length = audio_length
@@ -96,33 +98,13 @@ class AudioDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         return utils.normalise_tensor(self.concated_mfcc[idx]), self.concated_targets[idx]
 
+
 if __name__ == '__main__':
 
-    # metadata: length of each audio segments
-    length_of_training_audio_clips = 5
-
-    # process the wav files
-    # if len(os.listdir('../data/wav_files_single_channel/')) == 0:
-    wav_files = os.listdir("../data/wav_files_5_seconds")
-    gaze_files = os.listdir("../data/gaze_files")
-    print(len(wav_files)/2)
-    # gazes = create_targets_for_all_participants('../data/wav_files_5_seconds', length_of_training_audio_clips, 0.1)
-    # print(len(gazes.keys()))
-    
-    
-    
-    wav_folder = '../data/wav_files_single_channel/'
-    convert_to_mono_channel(wav_folder, '../data/wav_files', 0)
-    convert_to_mono_channel(wav_folder, '../data/wav_files', 1)
-    for file in tqdm(os.listdir(wav_folder)):
-        path = os.path.join(wav_folder, file)
-        create_audio_data(path, '../data/wav_files_5_seconds', length_of_training_audio_clips)
-    print(len(os.listdir("../data/wav_files_5_seconds")))
-    
     wav_5_sec_dir = '../data/wav_files_5_seconds/'
     gaze_dir = '../data/gaze_files'
     print('Initialising Dataset')
-    dataset = AudioDataset(wav_5_sec_dir, gaze_dir, length_of_training_audio_clips, 0.1, 0.01)
+    dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1, 0.01)
 
     print(dataset.__len__())
     x, y = dataset.__getitem__(420)

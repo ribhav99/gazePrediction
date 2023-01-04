@@ -119,10 +119,10 @@ if __name__ == '__main__':
     wav_5_sec_dir = '../data/wav_files_5_seconds/'
     gaze_dir = '../data/gaze_files'
     config = export_config()
-    all_data = AudioDataset(wav_5_sec_dir, gaze_dir, 5, config['window_length'],
-        config['time_step'])
-    # all_data = SpeakerVSnonspeakerData(wav_5_sec_dir, gaze_dir, 5,
-    #     config['window_length'], config['time_step'], 'listening')
+    # all_data = AudioDataset(wav_5_sec_dir, gaze_dir, 5, config['window_length'],
+    #     config['time_step'])
+    all_data = SpeakerVSnonspeakerData(wav_5_sec_dir, gaze_dir, 5,
+        config['window_length'], config['time_step'], 'listening')
     x, _ = all_data.__getitem__(0)
     model = CNNet(config, [1] + list(x.shape), int(5/config["window_length"]))
     valid_size = len(all_data) // 5
@@ -153,4 +153,3 @@ if __name__ == '__main__':
     for f in os.listdir('.'):
         if f.endswith('.pt') and f != best_model_name:
             os.remove(f)
-            
