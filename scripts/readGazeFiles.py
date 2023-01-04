@@ -6,7 +6,6 @@ import torch
 import os
 
 def get_intervals(file_path, channel):
-
     grid = textgrids.TextGrid(file_path)
     if channel == 0:
         try:

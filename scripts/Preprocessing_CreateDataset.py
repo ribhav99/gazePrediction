@@ -5,6 +5,10 @@ import torch
 import warnings
 import wave
 import utils
+import librosa
+import textgrids
+import math
+from bisect import bisect
 from readGazeFiles import create_targets_for_all_participants
 from readAudioFiles import convert_to_mono_channel, create_audio_data
 import parselmouth
@@ -49,52 +53,87 @@ def load_audio_data(wav_dir, participants=None, time_step=0.1):
             all_mfcc[full_key] = torch.cat([all_mfcc[full_key], mfcc_spectogram], dim=0)
     return all_mfcc
 
-def preprocess_data(wav_dir, gaze_dir, audio_length, window_length=0.1, time_step=0.1, testing=False):
+def preprocess_data(wav_dir, gaze_dir, length_of_training_audio_clips, sample_width=0.1, time_step=0.1, testing=False):
     # get target data
     print('Initialising Targets')
-    shutil.rmtree("../data/processed_file/target")
-    shutil.rmtree("../data/processed_file/input")
+    try:
+        shutil.rmtree("../data/processed_file")
+    except:
+        pass
+    os.mkdir("../data/processed_file")
     os.mkdir("../data/processed_file/target")
     os.mkdir("../data/processed_file/input")
-    all_targets = create_targets_for_all_participants(gaze_dir, audio_length, window_length) 
-    participants = [i[:i.index('.gaze')] for i in os.listdir(gaze_dir)]
-    keys = list(all_targets.keys())
-    file_names = []
-    # iterate through the targets and save each one as a file
-    for key in keys:
-        for i in range(0, int(all_targets[key].shape[0])):
-            file_name = "../data/processed_file/target/{}_{}.pt"
-            file_name = file_name.format(key, i)
-            torch.save(all_targets[key][i], file_name)
-            file_names.append(file_name)
-    print(file_names.__len__())
-    # get sound_data
-    # first convert to single channel wav files
-    if not testing: # ignore this when testing
-        convert_to_mono_channel(wav_dir, '../data/wav_files', 0)
-        convert_to_mono_channel(wav_dir, '../data/wav_files', 1)
-    # then parse then into 5 seconds segments
-    for key in keys:
-        # just the part with the DVA13U
-        file_raw_name = key.split("_")[0]
-        # do it for both channels:
-        for cha in range(0, 2):
-            input_file_name = "../data/wav_files_single_channel/channel_{}_{}.wav".format(cha, file_raw_name)
-            output_file_name_per_clip = "../data/processed_file/input/{}_channel_{}_".format(file_raw_name, cha)
-            output_file_name_per_clip = output_file_name_per_clip + "{}.pt"
-            wav = wave.open(input_file_name, 'rb')
-            length = wav.getnframes() / wav.getframerate()
-            frames_per_second_for_reading = wav.getframerate() * wav.getsampwidth()
-            frames = wav.readframes(-1)
-            for i in range(int(length/audio_length)):
-                save_path = output_file_name_per_clip.format(i)
-                outwav = wave.open(save_path, 'wb')
-                outwav.setparams(wav.getparams())
-                outwav.setnframes(frames_per_second_for_reading * audio_length)
-                outwav.writeframes(frames[frames_per_second_for_reading * audio_length*i:frames_per_second_for_reading * audio_length*(i+1)])
-                outwav.close()
-    print(len(os.listdir("../data/processed_file/input/")))
-            
+
+    # iterate through each audio/annotation pair
+    audio_file_list = list(os.listdir("../data/wav_files"))
+    annotation_file_list = list(os.listdir("../data/gaze_files"))
+
+    training_sample_list = []
+    for i in range(0, len(annotation_file_list)):
+        annotation_filepath = annotation_file_list[i]
+        annotation_speaker_name = annotation_filepath.split(".")[0].split("_")[0]
+        for j in range(0, len(audio_file_list)):
+            audio_filepath = audio_file_list[j]
+            audio_speaker_name = audio_filepath.split(".")[0]
+            # find the file that matches the annotation
+            if audio_speaker_name == annotation_speaker_name:
+                # load praat_script
+                try:
+                    grid = textgrids.TextGrid(os.path.join(gaze_dir, annotation_filepath))
+                except:
+                    # failutre to load praat script
+                    print("failure to load {}".format(annotation_filepath))
+                    break
+                # load audio
+                audio, sr = librosa.load(os.path.join(wav_dir, audio_filepath), mono=False)
+                try:
+                    speaker_0_gaze_tier = grid['kijkrichting spreker1 [v] (TIE1)']
+                    speaker_1_gaze_tier = grid['kijkrichting spreker2 [v] (TIE3)']
+                except:
+                    speaker_0_gaze_tier = grid['kijkrichting spreker1 (TIE1)']
+                    speaker_1_gaze_tier = grid['kijkrichting spreker2 (TIE3)']
+
+                # get the list of lower bound of the intervals
+                annotation_speaker_0_starts = [i.xmin for i in speaker_0_gaze_tier]
+                annotation_speaker_1_starts = [i.xmin for i in speaker_1_gaze_tier]
+                # obtain total number of segments:
+                end_time = speaker_1_gaze_tier[-1].xmax
+                num_of_segments = math.floor(end_time / length_of_training_audio_clips)
+                num_targets_per_segment = int(length_of_training_audio_clips / sample_width)
+                num_samples_per_segment = int(sr * length_of_training_audio_clips)
+                for s in range(num_of_segments):
+                    # get speaker_target
+                    target_speaker_0 = torch.zeros([num_targets_per_segment])
+                    target_speaker_1 = torch.zeros([num_targets_per_segment])
+                    for sample in range(num_targets_per_segment):
+                        time = (s * length_of_training_audio_clips) + (sample * sample_width)
+
+                        index_speaker0 = bisect(annotation_speaker_0_starts, time)
+                        target0 = 1 if speaker_0_gaze_tier[index_speaker0 - 1].text == 'g' else 0 # g is gaze, x is aversion
+                        target_speaker_0[sample] = target0
+
+                        index_speaker1 = bisect(annotation_speaker_1_starts, time)
+                        target1 = 1 if speaker_1_gaze_tier[index_speaker1 - 1].text == 'g' else 0 # g is gaze, x is aversion
+                        target_speaker_1[sample] = target1
+                    # get the wav files
+                    wav_speaker_0 = audio[0, s * num_samples_per_segment: (s + 1) * num_samples_per_segment]
+                    wav_speaker_1 = audio[1, s * num_samples_per_segment: (s + 1) * num_samples_per_segment]
+                    # turn them into torch files
+                    wav_speaker_0_tensor = torch.from_numpy(wav_speaker_0)
+                    wav_speaker_1_tensor = torch.from_numpy(wav_speaker_1)
+
+                    # store the files
+                    torch.save(wav_speaker_0_tensor, "../data/processed_file/input/{}_part_{}_speaker_0.pt".format(annotation_speaker_name, s))
+                    torch.save(wav_speaker_1_tensor, "../data/processed_file/input/{}_part_{}_speaker_1.pt".format(annotation_speaker_name, s))
+                    torch.save(target_speaker_0, "../data/processed_file/target/{}_part_{}_speaker_0.pt".format(annotation_speaker_name, s))
+                    torch.save(target_speaker_1, "../data/processed_file/target/{}_part_{}_speaker_1.pt".format(annotation_speaker_name, s))
+                    training_sample_list.append("{}_part_{}".format(annotation_speaker_name, s))
+                with open("../data/processed_file/index.txt", "w") as f:
+                    for line in range(0, len(training_sample_list)):
+                        f.write(training_sample_list[line])
+                        f.write("\n")
+                    f.close()
+                break
 
         
             
@@ -102,7 +141,7 @@ def preprocess_data(wav_dir, gaze_dir, audio_length, window_length=0.1, time_ste
     
 
 class AudioDataset(torch.utils.data.Dataset):
-    def __init__(self, wav_dir, gaze_dir, audio_length=5, window_length=0.1, time_step=0.1):
+    def __init__(self, data_dir, audio_length=5, window_length=0.1, time_step=0.1):
         super().__init__()
         print('Initialising Targets')
         all_targets = create_targets_for_all_participants(gaze_dir, audio_length, window_length) 
@@ -158,30 +197,15 @@ if __name__ == '__main__':
     # if len(os.listdir('../data/wav_files_single_channel/')) == 0:
     wav_files = os.listdir("../data/wav_files_5_seconds")
     gaze_files = os.listdir("../data/gaze_files")
-    # gazes = create_targets_for_all_participants('../data/wav_files_5_seconds', length_of_training_audio_clips, 0.1)
-    # print(len(gazes.keys()))
-    
+
     wav_5_sec_dir = '../data/wav_files_5_seconds/'
     gaze_dir = '../data/gaze_files'
-    
-    preprocess_data(wav_5_sec_dir, gaze_dir, length_of_training_audio_clips, 0.1, 0.01, testing=True)
-    
-    A[2]
-    wav_folder = '../data/wav_files_single_channel/'
-    convert_to_mono_channel(wav_folder, '../data/wav_files', 0)
-    convert_to_mono_channel(wav_folder, '../data/wav_files', 1)
-    for file in tqdm(os.listdir(wav_folder)):
-        path = os.path.join(wav_folder, file)
-        create_audio_data(path, '../data/wav_files_5_seconds', length_of_training_audio_clips)
-    print(len(os.listdir("../data/wav_files_5_seconds")))
-    
-    A[2]
-    dataset = AudioDataset(wav_5_sec_dir, gaze_dir, length_of_training_audio_clips, 0.1, 0.01)
+    wav_dir = '../data/wav_files'
+    data_dir = "../data/processed_file"
+    cold_start = False
 
-    print(dataset.__len__())
-    x, y = dataset.__getitem__(420)
-    print(x.shape)
-    print(y.shape)
-    print(x.dtype)
-    print(y.dtype)
-    
+    if cold_start:
+        preprocess_data(wav_dir, gaze_dir, length_of_training_audio_clips, 0.01, 0.01, testing=False)
+    else:
+        pass
+    AudioDataset(data_dir)
