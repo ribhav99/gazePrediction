@@ -10,7 +10,7 @@ import torch.nn as nn
 from train import validation_confusion_matrix
 
 
-audio_file_path = '../data/wav_files_5_seconds/_Number_0_channel_0_DVB9N'
+audio_file_path = '../data/wav_files_5_seconds/_Number_0_channel_0_DVB9N.wav'
 checkpoint_name = 'time=2022-11-29 06:22:13.018369_epoch=10.pt'
 run_obj = wandb.init(project="gaze_prediction", save_code=True,
                 resume='allow', id='288j7s6z')
