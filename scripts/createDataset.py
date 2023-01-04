@@ -4,7 +4,7 @@ from tqdm import tqdm
 import torch
 import warnings
 import utils
-from readGazeFiles import create_targets_for_all_participants
+from readGazeFiles import create_targets_for_all_participants, create_targets
 import parselmouth
 import numpy as np
 warnings.filterwarnings("ignore") 
@@ -47,6 +47,19 @@ def load_audio_data(wav_dir, participants=None, time_step=0.1):
             all_mfcc[full_key] = torch.cat([all_mfcc[full_key], mfcc_spectogram], dim=0)
     
     return all_mfcc
+
+
+def load_single_audio_file_normalised(file_path, time_step=0.1):
+    waveform, sample_rate = torchaudio.load(file_path)
+    mfcc_spectogram = torchaudio.transforms.MFCC(sample_rate=sample_rate)(waveform)
+    # Intensity
+    snd = parselmouth.Sound(file_path)
+    intensity = torch.tensor(snd.to_intensity(time_step=time_step).values).flatten()
+    to_pad = mfcc_spectogram.shape[2] - intensity.shape[0]
+    intensity = torch.cat([intensity, torch.zeros(to_pad)], 0).to(torch.float32)
+    mfcc_spectogram = torch.cat([mfcc_spectogram, intensity.unsqueeze(0).unsqueeze(0)], 1)
+    # return mfcc_spectogram
+    return utils.normalise_tensor(mfcc_spectogram.squeeze(0))
 
 
 class AudioDataset(torch.utils.data.Dataset):
@@ -98,18 +111,22 @@ class AudioDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         return utils.normalise_tensor(self.concated_mfcc[idx]), self.concated_targets[idx]
 
-
 if __name__ == '__main__':
 
-    wav_5_sec_dir = '../data/wav_files_5_seconds/'
-    gaze_dir = '../data/gaze_files'
-    print('Initialising Dataset')
-    dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1, 0.01)
+    # wav_5_sec_dir = '../data/wav_files_5_seconds/'
+    # gaze_dir = '../data/gaze_files'
+    # print('Initialising Dataset')
+    # dataset = AudioDataset(wav_5_sec_dir, gaze_dir, 5, 0.1, 0.01)
 
-    print(dataset.__len__())
-    x, y = dataset.__getitem__(420)
-    print(x.shape)
-    print(y.shape)
-    print(x.dtype)
-    print(y.dtype)
+    # print(dataset.__len__())
+    # x, y = dataset.__getitem__(420)
+    # print(x.shape)
+    # print(y.shape)
+    # print(x.dtype)
+    # print(y.dtype)
+    # print(x)
+    # print(y)
+
+    audio_file = '../data/wav_files_single_channel/channel_0_DVA2C.wav'
+    print(load_single_audio_file_normalised(audio_file))
     
