@@ -67,6 +67,7 @@ model.to(config['device'])
 
 pred = model(x.unsqueeze(0))
 pred = pred.cpu().detach().numpy().flatten().tolist()
+print(pred)
 
 Plot, Axis = plt.subplots()
  
