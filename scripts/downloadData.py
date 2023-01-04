@@ -23,9 +23,14 @@ def download_files(link, startswith=None, endswith=None):
                 full_url = link + url
                 file_type = url[url.index('.') + 1:]
                 save_folder = f'../data/{file_type}_files'
+                if os.path.exists(os.path.join(save_folder, url)):
+                    continue
                 if not os.path.isdir(save_folder):
                     os.mkdir(save_folder)
                 res = requests.get(full_url)
+
+
+
                 with open(os.path.join(save_folder, url), 'wb') as f:
                     f.write(res.content)
 
