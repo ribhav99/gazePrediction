@@ -158,7 +158,6 @@ if __name__ == '__main__':
     # if len(os.listdir('../data/wav_files_single_channel/')) == 0:
     wav_files = os.listdir("../data/wav_files_5_seconds")
     gaze_files = os.listdir("../data/gaze_files")
-    print(len(wav_files)/2)
     # gazes = create_targets_for_all_participants('../data/wav_files_5_seconds', length_of_training_audio_clips, 0.1)
     # print(len(gazes.keys()))
     
