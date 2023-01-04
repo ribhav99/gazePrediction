@@ -15,7 +15,7 @@ import parselmouth
 import numpy as np
 import shutil
 warnings.filterwarnings("ignore") 
-def load_audio_data(wav_dir, participants=None, time_step=0.1):
+def pre_process_audio_data(wav_dir, participants=None, time_step=0.1):
     all_mfcc = {}
     for file_name in tqdm(sorted(os.listdir(wav_dir), key=utils.sort_name_by_part_number)):
         participant, channel = utils.get_participant_id_from_audio_clips(file_name)
@@ -134,11 +134,6 @@ def preprocess_data(wav_dir, gaze_dir, length_of_training_audio_clips, sample_wi
                         f.write("\n")
                     f.close()
                 break
-
-        
-            
-                    
-    
 
 class AudioDataset(torch.utils.data.Dataset):
     def __init__(self, data_dir, audio_length=5, window_length=0.1, time_step=0.1):
