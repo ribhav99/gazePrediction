@@ -52,8 +52,7 @@ def pre_process_audio_data(wav_dir, participants=None, time_step=0.1):
         else:
             all_mfcc[full_key] = torch.cat([all_mfcc[full_key], mfcc_spectogram], dim=0)
     return all_mfcc
-
-def preprocess_data(wav_dir, gaze_dir, length_of_training_audio_clips, sample_width=0.1, time_step=0.1, testing=False):
+def prepare_data(wav_dir, gaze_dir, length_of_training_audio_clips, sample_width=0.1, time_step=0.1, testing=False):
     # get target data
     print('Initialising Targets')
     try:
@@ -135,6 +134,34 @@ def preprocess_data(wav_dir, gaze_dir, length_of_training_audio_clips, sample_wi
                     f.close()
                 break
 
+class AudioDataset_Evan(torch.utils.data.Dataset):
+    def __init__(self, data_dir, audio_length, window_length=0.01, time_step=0.01, listener_data=False):
+        super().__init__()
+        print('Initialising Targets')
+        data_indexes = []
+        with open(os.path.join(data_dir, "index.txt")) as f:
+            data_indexes = f.readlines()
+            f.close()
+        for i in range(0, len(data_indexes)):
+            data_indexes[i] = data_indexes[i].strip("\n")
+        self.data_paths = data_indexes
+        self.data_dir = data_dir
+        self.listener_data = listener_data
+    def __len__(self):
+        return len(self.data_paths) * 2
+    def __getitem__(self, idx):
+        channel = 0
+        if idx >= len(self.data_paths):
+            idx = idx // 2
+            channel = 1
+        file_name = self.data_paths[idx]
+        input_file_path = os.path.join(self.data_dir, "input/{}_speaker_{}.pt".format(file_name, channel))
+        target_file_path = os.path.join(self.data_dir, "target/{}_speaker_{}.pt".format(file_name, channel))
+        if not self.listener_data:
+            input = torch.load(input_file_path)
+            target = torch.load(target_file_path)
+            return input, target
+
 class AudioDataset(torch.utils.data.Dataset):
     def __init__(self, data_dir, audio_length=5, window_length=0.1, time_step=0.1):
         super().__init__()
@@ -200,7 +227,8 @@ if __name__ == '__main__':
     cold_start = False
 
     if cold_start:
-        preprocess_data(wav_dir, gaze_dir, length_of_training_audio_clips, 0.01, 0.01, testing=False)
+        prepare_data(wav_dir, gaze_dir, length_of_training_audio_clips, 0.01, 0.01, testing=False)
     else:
         pass
-    AudioDataset(data_dir)
+    dataset = AudioDataset_Evan(data_dir, 5, 0.01, 0.01)
+    data, target = dataset.__getitem__(0)

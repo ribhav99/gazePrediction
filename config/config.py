@@ -19,9 +19,11 @@ def export_config():
         "loss_fn": utils.weighted_binary_cross_entropy,
         "learning_rate": 0.00001,
         "batch_size": 64,
-        "wandb": True,
+        "wandb": False,
         "load_model": False,
         "early_stopping": 5,
-        "window_length": 0.1,
-        "time_step": 0.01 # window_length / this shoulkd be <= 1201 (for 5 sec samples)
+        "sample_length": 5,
+        "window_length": 0.01,
+        "time_step": 0.01, # window_length / this shoulkd be <= 1201 (for 5 sec samples)
+        "use_listener": False
     }
