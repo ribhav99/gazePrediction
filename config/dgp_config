@@ -1,0 +1,10 @@
+Host medusa.dgp.toronto.edu
+  HostName medusa.dgp.toronto.edu
+  User evanpan
+  ForwardAgent yes
+
+Host odysseus.dgpsrv.sandbox
+  HostName odysseus.dgpsrv.sandbox
+  User evanpan
+  ForwardAgent yes
+  ProxyJump medusa.dgp.toronto.edu
