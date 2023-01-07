@@ -178,8 +178,8 @@ class AudioDataset_Evan(torch.utils.data.Dataset):
         input_file_path = os.path.join(self.data_dir, "input/{}_speaker_{}.pt".format(file_name, channel))
         target_file_path = os.path.join(self.data_dir, "target/{}_speaker_{}.pt".format(file_name, channel))
         if not self.listener_data:
-            input = torch.load(input_file_path)
-            target = torch.load(target_file_path)
+            input = torch.FloatTensor(torch.load(input_file_path))
+            target = torch.FloatTensor(torch.load(target_file_path))
             return input, target
 
 class AudioDataset(torch.utils.data.Dataset):

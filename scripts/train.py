@@ -28,7 +28,7 @@ def train_model(model, config, train_data, valid_data, wandb):
         total_valid_loss = 0
 
         for _, (X, Y) in enumerate(train_data):
-            X, Y = X.to(device).float(), Y.to(device).float()
+            X, Y = X.to(device), Y.to(device)
             optimiser.zero_grad()
             pred = model(X)
             loss = loss_fn(pred, Y)
@@ -64,7 +64,7 @@ def train_model(model, config, train_data, valid_data, wandb):
 
         if total_valid_loss == min(valid_loss):
             file_name = f'time={datetime.now()}_epoch={epoch}.pt'
-            torch.save(model.model.state_dict(), file_name)
+            torch.save(model.state_dict(), file_name)
                 
                 
         if config['early_stopping']:
