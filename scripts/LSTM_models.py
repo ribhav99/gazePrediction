@@ -21,7 +21,6 @@ class LSTM_BN(nn.Module):
         self.bn2 = nn.BatchNorm1d(64)
 
         self.sigmoid = nn.Sigmoid()
-        self.softmax = nn.Softmax(dim=2)
     def concate_frames(self, input_audio):
         padding = torch.zeros((input_audio.shape[0], self.win_length, input_audio.shape[2]))
         padded_input_audio = torch.cat([padding, input_audio, padding], dim=1)
@@ -36,9 +35,8 @@ class LSTM_BN(nn.Module):
         rtv = torch.cat(window_audio, dim=1)
         return rtv
     def forward(self, input_audio):
-        print(input_audio.shape)
         mod_audio = self.concate_frames(input_audio)
-        # here I'm assuming that the input_audio is of shape
+        # here I'm assuming that the input_audio is of proper shape
         hidden_state = [torch.zeros((self.num_lstm_layer, mod_audio.shape[0], self.hidden_dim)), torch.zeros((self.num_lstm_layer, mod_audio.shape[0], self.hidden_dim))]
         out, hidden_state = self.lstm(mod_audio, hidden_state)
         # bn
@@ -49,37 +47,30 @@ class LSTM_BN(nn.Module):
 
     def test_forward(self, input_audio):
         x = self.forward(input_audio)
-        return self.softmax(x)
+        return self.sigmoid(x)
 
 class Gaze_aversion_detector():
-    def __init__(self, model_dir = "./models/over_trained_model.pt"):
+    def __init__(self, config):
         if torch.cuda.is_available():
             dev = "cuda:1"
         else:
             dev = "cpu"
-        self.model = LSTM_BN()
-        self.model.load_state_dict(torch.load(model_dir, map_location=torch.device(dev))["model_state_dict"])
-    def __call__(self, sound_arr, *args, **kwargs):
+        self.model = LSTM_BN(config)
+        self.config = config
+
+    def __call__(self, sound_arr):
         # audio should be the
         sound_arr = (sound_arr - sound_arr.mean()) / sound_arr.std()
-        sr = 44100
+        sr = self.config["sample_rate"]
         appended = False
         if sound_arr.shape[0] < sr * 0.2:
             sound_arr = np.concatenate([np.zeros((int(sr * 0.2), )), sound_arr], axis=0)
             appended = True
-        winstep = 441
-        mfcc_feat = psf.mfcc(sound_arr, samplerate=sr, winlen=0.02, nfft=2 * winstep, numcep=13)
+        winstep = int(sr * self.config["window_length"])
+        mfcc_feat = psf.mfcc(sound_arr, samplerate=sr, winlen=self.config["window_length"], nfft=2 * winstep, numcep=13)
         logfbank_feat = psf.logfbank(sound_arr, samplerate=sr, winlen=0.02, nfft=2 * winstep, nfilt=26)
         ssc_feat = psf.ssc(sound_arr, samplerate=sr, winlen=0.02, nfft=2 * winstep, nfilt=26)
         full_feat = np.concatenate([mfcc_feat, logfbank_feat, ssc_feat], axis=1)
         input_vec = torch.tensor(np.expand_dims(full_feat, axis=0), dtype=torch.float32)
         out_vec = self.model.test_forward(input_vec)[0]
-        if appended:
-            out = out_vec.detach().numpy()[20:]
-        else:
-            out = out_vec.detach().numpy()
-        coarse_out = out[:, 0:4]
-        coarse_out[:, 1] = out[:, 1] + out[:, 2]
-        coarse_out[:, 2] = out[:, 3] + out[:, 4]
-        coarse_out[:, 3] = out[:, 5]
-        return out, coarse_out
+        return out_vec

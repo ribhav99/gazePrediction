@@ -8,6 +8,8 @@ from datetime import datetime
 from sklearn import metrics
 import utils
 from config.config import export_config # type: ignore
+from config.config import export_config_Evan # type: ignore
+
 
 def train_model(model, config, train_data, valid_data, wandb):
     optimiser = torch.optim.Adam(model.parameters(), lr=config["learning_rate"])
@@ -26,8 +28,8 @@ def train_model(model, config, train_data, valid_data, wandb):
         total_valid_loss = 0
 
         for _, (X, Y) in enumerate(train_data):
-
             X, Y = X.to(device), Y.to(device)
+            print(X.type())
             optimiser.zero_grad()
             pred = model(X)
             loss = loss_fn(pred, Y)
@@ -63,7 +65,7 @@ def train_model(model, config, train_data, valid_data, wandb):
 
         if total_valid_loss == min(valid_loss):
             file_name = f'time={datetime.now()}_epoch={epoch}.pt'
-            torch.save(model.state_dict(), file_name)
+            torch.save(model.model.state_dict(), file_name)
                 
                 
         if config['early_stopping']:
@@ -79,8 +81,7 @@ def train_model(model, config, train_data, valid_data, wandb):
         
     if config['wandb']:
         wandb.save(file_name)
-    return file_name  
-
+    return file_name
 def validation_confusion_matrix(model_name, valid_data, config, wandb, run_obj, model):
     if config['wandb']:
         wandb.restore(model_name, run_path=f'ribhav99/gaze_prediction/{run_obj.id}')
@@ -111,11 +112,11 @@ def validation_confusion_matrix(model_name, valid_data, config, wandb, run_obj, 
 
 
 if __name__ == '__main__':
-    from LSTM_models import LSTM_BN
+    from LSTM_models import LSTM_BN, Gaze_aversion_detector
     from Preprocessing_CreateDataset import AudioDataset_Evan
 
     torch.manual_seed(6)
-    config = export_config()
+    config = export_config_Evan()
     all_data = AudioDataset_Evan("../data/processed_file", config["sample_length"], config["window_length"], config["time_step"], config["use_listener"])
     x, _ = all_data.__getitem__(0)
     model = LSTM_BN(config)

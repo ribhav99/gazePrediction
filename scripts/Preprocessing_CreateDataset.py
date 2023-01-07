@@ -12,8 +12,10 @@ from bisect import bisect
 from readGazeFiles import create_targets_for_all_participants
 from readAudioFiles import convert_to_mono_channel, create_audio_data
 import parselmouth
+import python_speech_features as psf
 import numpy as np
 import shutil
+from config.config import export_config_Evan
 warnings.filterwarnings("ignore") 
 def pre_process_audio_data(wav_dir, participants=None, time_step=0.1):
     all_mfcc = {}
@@ -117,13 +119,31 @@ def prepare_data(wav_dir, gaze_dir, length_of_training_audio_clips, sample_width
                     # get the wav files
                     wav_speaker_0 = audio[0, s * num_samples_per_segment: (s + 1) * num_samples_per_segment]
                     wav_speaker_1 = audio[1, s * num_samples_per_segment: (s + 1) * num_samples_per_segment]
-                    # turn them into torch files
-                    wav_speaker_0_tensor = torch.from_numpy(wav_speaker_0)
-                    wav_speaker_1_tensor = torch.from_numpy(wav_speaker_1)
-
+                    # pad the speaker_array with zero at the front abd back
+                    wav_speaker_0 = np.pad(wav_speaker_0, int(sr*time_step/2))
+                    wav_speaker_1 = np.pad(wav_speaker_1, int(sr*time_step/2))
+                    # get the mfcc features for speaker 0
+                    winstep = int(math.floor(time_step * sr))
+                    mfcc_featspeaker_0 = psf.mfcc(wav_speaker_0, samplerate=sr, winlen=config["window_length"],
+                                         winstep=config["window_length"], nfft=winstep, numcep=13)
+                    logfbank_featspeaker_0 = psf.logfbank(wav_speaker_0, samplerate=sr, winlen=config["window_length"],
+                                                 winstep=config["window_length"],nfft=winstep, nfilt=26)
+                    ssc_featspeaker_0 = psf.ssc(wav_speaker_0, samplerate=sr, winlen=config["window_length"],
+                                       winstep=config["window_length"], nfft=winstep, nfilt=26)
+                    full_feat_speaker_0 = np.concatenate([mfcc_featspeaker_0, logfbank_featspeaker_0, ssc_featspeaker_0], axis=1)
+                    # get the mfcc features for speaker 1
+                    mfcc_featspeaker_1 = psf.mfcc(wav_speaker_1, samplerate=sr, winlen=config["window_length"],
+                                                  winstep=config["window_length"], nfft=winstep, numcep=13)
+                    logfbank_featspeaker_1 = psf.logfbank(wav_speaker_1, samplerate=sr, winlen=config["window_length"],
+                                                          winstep=config["window_length"], nfft=winstep, nfilt=26)
+                    ssc_featspeaker_1 = psf.ssc(wav_speaker_1, samplerate=sr, winlen=config["window_length"],
+                                                winstep=config["window_length"], nfft=winstep, nfilt=26)
+                    full_feat_speaker_1 = np.concatenate(
+                        [mfcc_featspeaker_1, logfbank_featspeaker_1, ssc_featspeaker_1], axis=1)
+                    print(full_feat_speaker_1.shape)
                     # store the files
-                    torch.save(wav_speaker_0_tensor, "../data/processed_file/input/{}_part_{}_speaker_0.pt".format(annotation_speaker_name, s))
-                    torch.save(wav_speaker_1_tensor, "../data/processed_file/input/{}_part_{}_speaker_1.pt".format(annotation_speaker_name, s))
+                    torch.save(full_feat_speaker_0, "../data/processed_file/input/{}_part_{}_speaker_0.pt".format(annotation_speaker_name, s))
+                    torch.save(full_feat_speaker_1, "../data/processed_file/input/{}_part_{}_speaker_1.pt".format(annotation_speaker_name, s))
                     torch.save(target_speaker_0, "../data/processed_file/target/{}_part_{}_speaker_0.pt".format(annotation_speaker_name, s))
                     torch.save(target_speaker_1, "../data/processed_file/target/{}_part_{}_speaker_1.pt".format(annotation_speaker_name, s))
                     training_sample_list.append("{}_part_{}".format(annotation_speaker_name, s))
@@ -224,10 +244,15 @@ if __name__ == '__main__':
     gaze_dir = '../data/gaze_files'
     wav_dir = '../data/wav_files'
     data_dir = "../data/processed_file"
-    cold_start = False
+    cold_start = True
+
+    config = export_config_Evan()
 
     if cold_start:
-        prepare_data(wav_dir, gaze_dir, length_of_training_audio_clips, 0.01, 0.01, testing=False)
+        prepare_data(wav_dir, gaze_dir,
+                     config["sample_length"],
+                     config["window_length"],
+                     config["time_step"], testing=False)
     else:
         pass
     dataset = AudioDataset_Evan(data_dir, 5, 0.01, 0.01)
