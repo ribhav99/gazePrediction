@@ -28,8 +28,7 @@ def train_model(model, config, train_data, valid_data, wandb):
         total_valid_loss = 0
 
         for _, (X, Y) in enumerate(train_data):
-            X, Y = X.to(device), Y.to(device)
-            print(X.type())
+            X, Y = X.to(device).float(), Y.to(device).float()
             optimiser.zero_grad()
             pred = model(X)
             loss = loss_fn(pred, Y)
@@ -115,6 +114,7 @@ if __name__ == '__main__':
     from LSTM_models import LSTM_BN, Gaze_aversion_detector
     from Preprocessing_CreateDataset import AudioDataset_Evan
 
+    torch.set_default_tensor_type(torch.FloatTensor)
     torch.manual_seed(6)
     config = export_config_Evan()
     all_data = AudioDataset_Evan("../data/processed_file", config["sample_length"], config["window_length"], config["time_step"], config["use_listener"])

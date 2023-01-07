@@ -14,7 +14,7 @@ class LSTM_BN(nn.Module):
         # The LSTM takes word embeddings as inputs, and outputs hidden states
         # with dimensionality hidden_dim.
         self.lstm = nn.LSTM(65 * (self.win_length * 2 + 1), self.hidden_dim, num_lstm_layer, batch_first=True)
-        self.output_mat1 = nn.Linear(self.hidden_dim, 2)
+        self.output_mat1 = nn.Linear(self.hidden_dim, 1)
         self.relu = nn.ReLU()
         self.bn = nn.BatchNorm1d(self.hidden_dim)
         self.bn1 = nn.BatchNorm1d(64)
@@ -43,11 +43,13 @@ class LSTM_BN(nn.Module):
         # x = self.bn(out.permute(0, 2, 1)).permute(0, 2, 1)
         x = self.relu(out)
         x = self.output_mat1(x)
+        x = x[:, :, 0]
+        x = self.sigmoid(x)
+        print(x.shape)
         return x
 
     def test_forward(self, input_audio):
         x = self.forward(input_audio)
-        return self.sigmoid(x)
 
 class Gaze_aversion_detector():
     def __init__(self, config):
