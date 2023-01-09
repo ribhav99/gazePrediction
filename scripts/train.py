@@ -1,14 +1,19 @@
 import sys
 sys.path.append('..')
 import torch
+from torchmetrics.classification import BinaryF1Score, F1Score
 import wandb
 from tqdm import trange
 import os
 from datetime import datetime
 from sklearn import metrics
 import utils
+from matplotlib import pyplot as plt
 from config.config import export_config # type: ignore
 from config.config import export_config_Evan # type: ignore
+
+from LSTM_models import *
+from Preprocessing_CreateDataset import AudioDataset_Evan
 
 
 def train_model(model, config, train_data, valid_data, wandb):
@@ -20,51 +25,77 @@ def train_model(model, config, train_data, valid_data, wandb):
 
     training_loss = []
     valid_loss = []
+    training_f1 = []
+    valid_f1 = []
     count = 0
 
+    # f1_score = BinaryF1Score(num_classes=2).to(device)
+    f1_score = F1Score(task="multiclass", num_classes=2, average="weighted").to(device)
     for epoch in trange(1, config['epochs'] + 1):
-
         total_train_loss = 0
         total_valid_loss = 0
-
+        total_train_f1 = 0
+        total_valid_f1 = 0
+        train_batch_counter = 0
+        valid_batch_counter = 0
+        model.zero_grad()
         for _, (X, Y) in enumerate(train_data):
+            train_batch_counter += 1
             X, Y = X.to(device), Y.to(device)
             optimiser.zero_grad()
-            pred = model(X)
+            if "Transformer" in config["model_type"]:
+                pred = model(X, Y)
+            else:
+                pred = model(X)
             loss = loss_fn(pred, Y)
             loss.backward()
             optimiser.step()
             total_train_loss += loss.item()
 
+            binary_pred = torch.round(pred)
+            f1_train = f1_score(binary_pred, Y).item()
+            total_train_f1 += f1_train
             del X, Y, pred
             torch.cuda.empty_cache()
 
-            
+        total_train_f1 /= train_batch_counter
         total_train_loss /= len(train_data)
 
         for _, (X, Y) in enumerate(valid_data):
             with torch.no_grad():
+                valid_batch_counter += 1
                 X, Y = X.to(device), Y.to(device)
-                pred = model(X)
+                if "Transformer" in config["model_type"]:
+                    all_zero = torch.zeros(Y.shape).to(device)
+                    pred = model(X, all_zero)
+                else:
+                    pred = model(X)
                 loss = loss_fn(pred, Y)
                 total_valid_loss += loss.item()
 
+                binary_pred = torch.round(pred)
+                f1_valid = f1_score(binary_pred, Y).item()
+                total_valid_f1 += f1_valid
+                
                 del X, Y, pred
                 torch.cuda.empty_cache()
 
-                
+        total_valid_f1 /= valid_batch_counter
         total_valid_loss /= len(valid_data)
 
         if config['wandb']:
             wandb.log({'training loss': total_train_loss,
-                        'validation_loss': total_valid_loss})
-        
+                        'validation_loss': total_valid_loss,
+                        'training_f1': total_train_f1,
+                        'validation_f1': total_valid_f1})
         training_loss.append(total_train_loss)
         valid_loss.append(total_valid_loss)
+        training_f1.append(total_train_f1)
+        valid_f1.append(total_valid_f1)
 
         if total_valid_loss == min(valid_loss):
             file_name = f'time={datetime.now()}_epoch={epoch}.pt'
-            torch.save(model.state_dict(), file_name)
+            torch.save(model.state_dict(), os.path.join("wandb/garb/", file_name))
                 
                 
         if config['early_stopping']:
@@ -77,9 +108,8 @@ def train_model(model, config, train_data, valid_data, wandb):
             if count == config['early_stopping']:
                 print('\n\nStopping early due to decrease in performance on validation set\n\n')
                 break 
-        
     if config['wandb']:
-        wandb.save(file_name)
+        wandb.save(os.path.join("wandb/garb/", file_name))
     return file_name
 def validation_confusion_matrix(model_name, valid_data, config, wandb, run_obj, model):
     if config['wandb']:
@@ -111,20 +141,19 @@ def validation_confusion_matrix(model_name, valid_data, config, wandb, run_obj, 
 
 
 if __name__ == '__main__':
-    from LSTM_models import LSTM_BN, Gaze_aversion_detector
-    from Preprocessing_CreateDataset import AudioDataset_Evan
-
-    torch.set_default_tensor_type(torch.FloatTensor)
     torch.manual_seed(6)
     config = export_config_Evan()
-    all_data = AudioDataset_Evan("../data/processed_file", config["sample_length"], config["window_length"], config["time_step"], config["use_listener"])
+    all_data = AudioDataset_Evan(config, "../data/processed_file", config["sample_length"], config["window_length"], config["time_step"], config["use_listener"])
     x, _ = all_data.__getitem__(0)
-    model = LSTM_BN(config)
+    # load model:
+    model = load_model(config)
+    
     valid_size = len(all_data) // 5
     torch.manual_seed(6)
     train, valid = torch.utils.data.random_split(all_data, [len(all_data) - valid_size, valid_size])
     train_dataloader = torch.utils.data.DataLoader(train, config['batch_size'], True)
     valid_dataloader = torch.utils.data.DataLoader(valid, config['batch_size'], True)
+
     if config['wandb']:
         wandb.login()
         if config["load_model"]:
